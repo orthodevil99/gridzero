@@ -812,11 +812,35 @@ async def enrich_with_live_gemini(preset: Dict[str, Any]) -> Dict[str, Any]:
         f"Physics solver rejected Draft #1 with {preset['agents']['agent_03']['rejected_draft']['violation_code']}. "
         f"Provide a concise 1-sentence power engineering rationale for the verified reroute."
     )
+    # This key may be a Gemini Developer API key (AIza...) OR a Vertex AI
+    # Express key (AQ....). The Vertex endpoint defaults to API v1, where
+    # JSON mode is disabled ("JSON mode is not enabled for api version v1.
+    # Use api version v1beta instead"), so the Vertex attempt pins v1beta.
+    # Every attempt has a hard timeout so a slow provider can never hang
+    # the crisis endpoint; the deterministic fallback always answers.
+    def _client(vertex: bool):
+        if vertex:
+            return genai.Client(
+                vertexai=True,
+                api_key=api_key,
+                http_options=types.HttpOptions(api_version="v1beta", timeout=12000),
+            )
+        return genai.Client(
+            api_key=api_key,
+            http_options=types.HttpOptions(timeout=12000),
+        )
+
+    attempts = [
+        (True, GEMINI_MODEL),
+        (False, GEMINI_MODEL),
+        (True, "gemini-3.5-flash-lite"),
+        (False, "gemini-2.5-flash"),
+    ]
     last_error_type = None
     last_error_detail = None
-    for model_id in GEMINI_FALLBACK_MODELS:
+    for use_vertex, model_id in attempts:
         try:
-            client = genai.Client(api_key=api_key)
+            client = _client(use_vertex)
             start_t = time.perf_counter()
             response = await asyncio.to_thread(
                 client.models.generate_content,
@@ -835,6 +859,7 @@ async def enrich_with_live_gemini(preset: Dict[str, Any]) -> Dict[str, Any]:
             preset["agents"]["agent_03"]["model"] = model_id
             preset["llm_mode"] = "live_gemini_verified"
             preset["llm_model"] = model_id
+            preset["llm_transport"] = "vertex_v1beta" if use_vertex else "developer_api"
             return preset
         except Exception as exc:  # never leak the key; keep only a sanitized provider message
             last_error_type = type(exc).__name__
