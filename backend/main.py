@@ -818,30 +818,32 @@ async def enrich_with_live_gemini(preset: Dict[str, Any]) -> Dict[str, Any]:
     # Use api version v1beta instead"), so the Vertex attempt pins v1beta.
     # Every attempt has a hard timeout so a slow provider can never hang
     # the crisis endpoint; the deterministic fallback always answers.
-    def _client(kind: str):
-        if kind == "vertex_v1beta1":
-            return genai.Client(vertexai=True, api_key=api_key,
-                                http_options=types.HttpOptions(api_version="v1beta1", timeout=12000))
-        if kind == "vertex_v1beta":
-            return genai.Client(vertexai=True, api_key=api_key,
-                                http_options=types.HttpOptions(api_version="v1beta", timeout=12000))
-        # developer_v1beta: the Gemini Developer API with the v1beta surface,
-        # which is where JSON mode / response_schema is enabled.
+    def _client():
+        # Gemini Developer API, v1beta surface (JSON mode / response_schema
+        # is not enabled on v1). Verified against this project's key: the
+        # Vertex transports are unusable here (Agent Platform API is not
+        # enabled in the key's Google Cloud project), while Developer v1beta
+        # reaches the model — its only failures so far are transient
+        # 503 "high demand" responses, so attempts retry with backoff and
+        # then fall across the current Flash family.
         return genai.Client(api_key=api_key,
-                            http_options=types.HttpOptions(api_version="v1beta", timeout=12000))
+                            http_options=types.HttpOptions(api_version="v1beta", timeout=15000))
 
     attempts = [
-        ("developer_v1beta", GEMINI_MODEL),
-        ("vertex_v1beta1", GEMINI_MODEL),
-        ("vertex_v1beta", GEMINI_MODEL),
-        ("developer_v1beta", "gemini-3.5-flash-lite"),
+        (GEMINI_MODEL, 0.0),
+        (GEMINI_MODEL, 2.0),
+        ("gemini-3.6-flash", 2.0),
+        ("gemini-3.5-flash-lite", 3.0),
+        ("gemini-3.1-flash-lite", 3.0),
     ]
     last_error_type = None
     last_error_detail = None
     attempt_errors = []
-    for transport, model_id in attempts:
+    for model_id, backoff_s in attempts:
+        if backoff_s:
+            await asyncio.sleep(backoff_s)
         try:
-            client = _client(transport)
+            client = _client()
             start_t = time.perf_counter()
             response = await asyncio.to_thread(
                 client.models.generate_content,
@@ -860,7 +862,7 @@ async def enrich_with_live_gemini(preset: Dict[str, Any]) -> Dict[str, Any]:
             preset["agents"]["agent_03"]["model"] = model_id
             preset["llm_mode"] = "live_gemini_verified"
             preset["llm_model"] = model_id
-            preset["llm_transport"] = transport
+            preset["llm_transport"] = "developer_v1beta"
             preset["llm_attempt_errors"] = attempt_errors
             return preset
         except Exception as exc:  # never leak the key; keep only a sanitized provider message
@@ -869,7 +871,7 @@ async def enrich_with_live_gemini(preset: Dict[str, Any]) -> Dict[str, Any]:
             if api_key:
                 detail = detail.replace(api_key, "[redacted]")
             last_error_detail = detail
-            attempt_errors.append({"transport": transport, "model": model_id, "error": detail})
+            attempt_errors.append({"transport": "developer_v1beta", "model": model_id, "error": detail})
             continue
 
     preset["llm_attempt_errors"] = attempt_errors
