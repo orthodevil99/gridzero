@@ -1,1 +1,1 @@
-{"$schema":"https://openapi.vercel.sh/vercel.json","functions":{"api/index.py":{"includeFiles":"frontend/**"}},"rewrites":[{"destination":"/api/index.py","source":"/(.*)"}]}
+{"$schema":"https://openapi.vercel.sh/vercel.json","functions":{"api/index.py":{"includeFiles":"frontend/**"}},"rewrites":[{"destination":"/api/index.py?__gz_path=/:path*","source":"/:path*"}]}

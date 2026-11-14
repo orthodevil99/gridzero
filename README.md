@@ -58,3 +58,10 @@ Vercel Python serverless function (`api/index.py` + `vercel.json`):
 
 Local run is the same idea: `export GEMINI_API_KEY=...` before `uvicorn`
 (see Quickstart). Without a key the app still runs fully in deterministic mode.
+
+> **Troubleshooting — every route returns `{"detail":"Not Found"}` on Vercel:**
+> Vercel rewrites forward the *destination* path to the Python function, so
+> FastAPI used to receive every request as `/api/index.py` and 404 everything.
+> Fixed in v3.7: `vercel.json` carries the original path as `?__gz_path=...`
+> and `RestoreOriginalPathMiddleware` in `api/index.py` restores it before
+> routing. If you fork this setup, keep those two pieces together.
