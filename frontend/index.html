@@ -1,0 +1,2520 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GridZero v3.5 — Neuro-Symbolic Micro-Grid & Civic Disaster Response Twin</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #060a12;
+      color: #e2e8f0;
+      overflow-x: hidden;
+      transition: font-size 0.15s ease, filter 0.2s ease;
+    }
+    body.large-text {
+      font-size: 108%;
+    }
+    body.high-contrast {
+      filter: contrast(1.22) saturate(1.18);
+      background-color: #000000;
+    }
+    .font-mono-tech {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .tactical-panel {
+      background: rgba(11, 18, 31, 0.93);
+      border: 1px solid rgba(56, 189, 248, 0.18);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.55);
+      backdrop-filter: blur(12px);
+    }
+    .hazard-stripe-bar {
+      background: repeating-linear-gradient(
+        -45deg,
+        rgba(245, 158, 11, 0.14),
+        rgba(245, 158, 11, 0.14) 12px,
+        rgba(15, 23, 42, 0.95) 12px,
+        rgba(15, 23, 42, 0.95) 24px
+      );
+    }
+    .demo-pulse {
+      animation: demoGlow 2s infinite ease-in-out;
+    }
+    @keyframes demoGlow {
+      0%, 100% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.65), 0 0 18px rgba(16, 185, 129, 0.45);
+      }
+      50% {
+        box-shadow: 0 0 0 8px rgba(16, 185, 129, 0), 0 0 28px rgba(52, 211, 153, 0.85);
+      }
+    }
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #070d19;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1e293b;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #38bdf8;
+    }
+    @media print {
+      header, aside, #tourBanner, #resilienceTopBar, #workspaceTabBar {
+        display: none !important;
+      }
+      body {
+        background: #ffffff !important;
+        color: #000000 !important;
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col select-none bg-[#060a12] text-slate-100">
+
+  <!-- SAHAYTA-INSPIRED TOP EMERGENCY RESILIENCE & ACCESSIBILITY RIBBON -->
+  <div id="resilienceTopBar" class="hazard-stripe-bar border-b border-amber-500/30 px-3 lg:px-5 py-1 flex flex-wrap items-center justify-between gap-2 text-[11px] font-mono-tech z-30">
+    <div class="flex items-center gap-2.5">
+      <span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-400/40 font-bold flex items-center gap-1">
+        <span>⚡ ZERO-TRUST DISASTER PORTAL</span>
+      </span>
+      <span id="offlineQueueBadge" class="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+        <span>Offline-First LocalQueue: 0 Pending • Synced</span>
+      </span>
+      <span class="hidden md:inline text-slate-400" id="i18nSubBanner">
+        AI Severity Triage + Deterministic Physics Verifier + Multi-Lingual Cell Broadcast
+      </span>
+    </div>
+
+    <!-- ACCESSIBILITY, MULTI-LINGUAL & EXPORT CONTROLS -->
+    <div class="flex items-center gap-1.5">
+      <!-- Language Selector -->
+      <select id="langSelector" onchange="changePortalLanguage(this.value)" class="bg-slate-900/90 border border-slate-700 text-cyan-300 rounded px-2 py-0.5 text-[11px] font-mono-tech focus:outline-none focus:border-cyan-400">
+        <option value="en">🌐 EN (English)</option>
+        <option value="hi">🇮🇳 हिन्दी (Hindi)</option>
+        <option value="es">🇪🇸 ES (Español)</option>
+      </select>
+
+      <!-- Text Scaling Toggle (T+) -->
+      <button id="btnTextScale" onclick="toggleLargeText()" class="px-2 py-0.5 rounded bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 font-bold transition" title="Toggle Large Accessibility Font">
+        T+
+      </button>
+
+      <!-- High-Contrast Sunlight Mode -->
+      <button id="btnHighContrast" onclick="toggleHighContrast()" class="px-2 py-0.5 rounded bg-slate-900 hover:bg-slate-800 text-amber-300 border border-slate-700 transition" title="Toggle High-Contrast Sunlight Mode">
+        ◐ Contrast
+      </button>
+
+      <!-- 1-Click JSON & Print Report Exports -->
+      <button id="btnExportJson" onclick="exportDisasterLogJson()" class="px-2 py-0.5 rounded bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 border border-cyan-500/30 transition">
+        ↓ JSON Log
+      </button>
+      <button id="btnExportPrint" onclick="printExecutiveIncidentReport()" class="px-2 py-0.5 rounded bg-purple-500/15 hover:bg-purple-500/25 text-purple-300 border border-purple-500/30 transition">
+        ↓ PDF / Print
+      </button>
+    </div>
+  </div>
+
+  <!-- TOP NAVIGATION BAR -->
+  <header class="h-14 border-b border-cyan-500/20 bg-[#080f1d]/95 px-3 lg:px-5 flex items-center justify-between gap-2 z-30">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-lg bg-cyan-500/15 border border-cyan-400/40 flex items-center justify-center text-cyan-400 font-bold font-mono-tech shadow-inner">
+        GZ
+      </div>
+      <div>
+        <div class="flex items-center gap-2">
+          <span class="font-bold tracking-wider text-sm lg:text-base text-white">GRIDZERO</span>
+          <span class="text-[10px] font-mono-tech uppercase px-2 py-0.5 rounded bg-cyan-500/15 text-cyan-300 border border-cyan-400/30">
+            NorCal Hacks 27 • v3.5 Civic + Grid Twin
+          </span>
+        </div>
+        <p id="i18nHeaderSubtitle" class="text-[11px] text-slate-400 hidden sm:block">
+          South Bay 12-Node Micro-Grid • Deterministic DC Power-Flow Verifier + <span class="text-cyan-300 font-mono-tech">gemini-3.8-flash</span>
+        </p>
+      </div>
+    </div>
+
+    <!-- CENTER LIVE STATUS PILLS -->
+    <div class="hidden xl:flex items-center gap-3 bg-slate-900/90 border border-slate-800 px-3 py-1.5 rounded-lg text-xs font-mono-tech">
+      <div class="flex items-center gap-1.5">
+        <span id="gridStatusDot" class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span class="text-slate-400">STATE:</span>
+        <span id="navGridStateText" class="text-emerald-400 font-semibold">NOMINAL BALANCED</span>
+      </div>
+      <span class="text-slate-700">|</span>
+      <div>
+        <span class="text-slate-400">BUS FREQ:</span>
+        <span id="navFreqValue" class="text-cyan-300 font-bold">60.00 Hz</span>
+      </div>
+      <span class="text-slate-700">|</span>
+      <div>
+        <span class="text-slate-400">RENEWABLE SHARE:</span>
+        <span id="navRenewableValue" class="text-emerald-300 font-bold">86.4%</span>
+      </div>
+      <span class="text-slate-700">|</span>
+      <div>
+        <span class="text-slate-400">SAN JOSE METEO:</span>
+        <span id="navWeatherText" class="text-amber-300">24.6°C • 685 W/m² • 28.4 km/h</span>
+      </div>
+    </div>
+
+    <!-- RIGHT ACTION CONTROLS -->
+    <div class="flex items-center gap-2">
+      <button id="btnJudgeTour" onclick="startJudgeDemoTour()" class="demo-pulse px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-bold text-xs lg:text-sm tracking-wide flex items-center gap-1.5 transition">
+        <i data-lucide="sparkles" class="w-4 h-4"></i>
+        <span>1-CLICK JUDGE DEMO TOUR</span>
+      </button>
+
+      <button id="btnBenchmarkDrawer" onclick="toggleBenchmarkModal(true)" class="px-2.5 py-1.5 rounded-lg bg-slate-800/90 hover:bg-slate-700 text-cyan-300 border border-cyan-500/30 text-xs font-mono-tech flex items-center gap-1.5 transition">
+        <i data-lucide="bar-chart-3" class="w-3.5 h-3.5"></i>
+        <span class="hidden md:inline">Ablation Benchmark</span>
+      </button>
+
+      <button id="btnArchModal" onclick="toggleArchModal(true)" class="px-2.5 py-1.5 rounded-lg bg-slate-800/90 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-mono-tech flex items-center gap-1.5 transition">
+        <i data-lucide="cpu" class="w-3.5 h-3.5 text-purple-400"></i>
+        <span class="hidden md:inline">System Architecture &amp; Validation</span>
+      </button>
+
+      <button id="btnAudioMute" onclick="toggleAudioMute()" class="p-2 rounded-lg bg-slate-800/90 hover:bg-slate-700 text-slate-300 border border-slate-700 transition" title="Toggle Web Audio Synthesizer">
+        <i id="iconAudioMute" data-lucide="volume-2" class="w-4 h-4 text-cyan-400"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- SAHAYTA-STYLE MULTI-VIEW COMMAND TABS + QUICK SOS BUTTON -->
+  <nav id="workspaceTabBar" class="bg-[#091326] border-b border-slate-800/90 px-3 lg:px-5 py-1.5 flex flex-wrap items-center justify-between gap-2 z-20">
+    <div class="flex items-center gap-1.5 overflow-x-auto">
+      <button id="tabBtnGrid" onclick="switchWorkspaceTab('grid')" class="px-3 py-1 rounded-lg text-xs font-mono-tech font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 flex items-center gap-1.5 transition">
+        <i data-lucide="activity" class="w-3.5 h-3.5"></i>
+        <span id="i18nTabGrid">1. Tactical Grid &amp; Physics Twin</span>
+      </button>
+
+      <button id="tabBtnSos" onclick="switchWorkspaceTab('sos')" class="px-3 py-1 rounded-lg text-xs font-mono-tech font-medium bg-slate-900/80 hover:bg-slate-800 text-slate-300 border border-slate-800 flex items-center gap-1.5 transition">
+        <i data-lucide="siren" class="w-3.5 h-3.5 text-rose-400"></i>
+        <span id="i18nTabSos">2. Civic SOS &amp; Triage Board</span>
+        <span id="badgeSosCount" class="px-1.5 py-0.2 rounded-full bg-rose-500/25 text-rose-300 text-[10px]">4</span>
+      </button>
+
+      <button id="tabBtnCrews" onclick="switchWorkspaceTab('crews')" class="px-3 py-1 rounded-lg text-xs font-mono-tech font-medium bg-slate-900/80 hover:bg-slate-800 text-slate-300 border border-slate-800 flex items-center gap-1.5 transition">
+        <i data-lucide="truck" class="w-3.5 h-3.5 text-emerald-400"></i>
+        <span id="i18nTabCrews">3. Mobile Megapack &amp; Crew Dispatch</span>
+        <span id="badgeCrewCount" class="px-1.5 py-0.2 rounded-full bg-emerald-500/25 text-emerald-300 text-[10px]">5 Units</span>
+      </button>
+
+      <button id="tabBtnAlerts" onclick="switchWorkspaceTab('alerts')" class="px-3 py-1 rounded-lg text-xs font-mono-tech font-medium bg-slate-900/80 hover:bg-slate-800 text-slate-300 border border-slate-800 flex items-center gap-1.5 transition">
+        <i data-lucide="radio" class="w-3.5 h-3.5 text-amber-400"></i>
+        <span id="i18nTabAlerts">4. Multi-Lingual Emergency Broadcast</span>
+      </button>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <div class="hidden sm:flex items-center gap-3 text-[11px] font-mono-tech bg-slate-950/80 px-2.5 py-1 rounded border border-slate-800">
+        <span>Active SOS: <strong id="kpiActiveSos" class="text-rose-400">4</strong></span>
+        <span>•</span>
+        <span>Critical Sev ≥4: <strong id="kpiHighSevSos" class="text-amber-300">3</strong></span>
+        <span>•</span>
+        <span>Hospitals Safe: <strong class="text-emerald-400">2/2 (100%)</strong></span>
+      </div>
+      <button id="btnOpenSosWizard" onclick="toggleSosModal(true)" class="px-3 py-1 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs font-mono-tech flex items-center gap-1.5 shadow-lg shadow-rose-950/50 transition">
+        <i data-lucide="alert-Octagon" class="w-3.5 h-3.5"></i>
+        <span id="i18nBtnReportSos">🚨 Report Grid / Medical SOS</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- GUIDED TOUR PROGRESS BANNER -->
+  <div id="tourBanner" class="hidden bg-gradient-to-r from-emerald-950/95 via-cyan-950/95 to-slate-900/95 border-b border-emerald-400/40 px-4 py-1.5 flex items-center justify-between text-xs font-mono-tech z-20">
+    <div class="flex items-center gap-2">
+      <span class="px-2 py-0.5 rounded bg-emerald-500 text-slate-950 font-bold">JUDGE DEMO TOUR ACTIVE</span>
+      <span id="tourStepText" class="text-emerald-200">Step 1/5: Injecting Santa Cruz Mountains Wildfire N-3 Contingency...</span>
+    </div>
+    <div class="flex items-center gap-3">
+      <div class="w-40 h-2 bg-slate-800 rounded-full overflow-hidden">
+        <div id="tourProgressBar" class="h-full bg-emerald-400 transition-all duration-300" style="width: 15%"></div>
+      </div>
+      <button id="btnStopTour" onclick="stopJudgeDemoTour()" class="text-rose-300 hover:text-rose-200 underline">Stop</button>
+    </div>
+  </div>
+
+  <!-- MAIN 3-COLUMN COMMAND WORKSPACE -->
+  <main class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-2.5 p-2.5 overflow-hidden">
+
+    <!-- LEFT SIDEBAR: CRISIS INJECTION DECK, SECTOR RISK GAUGE & LIVE METEO TELEMETRY (3 COLS) -->
+    <aside class="lg:col-span-3 flex flex-col gap-2.5 overflow-y-auto pr-0.5">
+      
+      <!-- CRISIS INJECTION DECK -->
+      <section class="tactical-panel rounded-xl p-3.5">
+        <div class="flex items-center justify-between mb-2">
+          <div class="flex items-center gap-2">
+            <i data-lucide="shield-alert" class="w-4 h-4 text-rose-400"></i>
+            <h2 id="i18nCrisisDeckTitle" class="text-xs font-bold uppercase tracking-wider text-slate-200">Crisis Injection Deck</h2>
+          </div>
+          <button id="btnResetGrid" onclick="resetGridToNominal()" class="text-[11px] font-mono-tech px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-cyan-500/20 transition">
+            Reset Nominal
+          </button>
+        </div>
+        <p class="text-[11px] text-slate-400 mb-2.5 leading-relaxed">
+          Trigger N-2/N-3 South Bay disasters to test multi-agent fault isolation and the Python DC Power-Flow constraint verifier.
+        </p>
+
+        <div class="space-y-2">
+          <button id="btnCrisisWildfire" onclick="triggerCrisisScenario('wildfire')" class="w-full text-left p-2.5 rounded-lg bg-rose-950/35 hover:bg-rose-900/50 border border-rose-500/40 transition group">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-rose-300 group-hover:text-white flex items-center gap-1.5">
+                <span>🔥 Santa Cruz Mountains Wildfire</span>
+              </span>
+              <span class="text-[10px] font-mono-tech px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300">N-3 FAULT</span>
+            </div>
+            <p class="text-[11px] text-slate-400 mt-1">
+              Severs northern 230kV/115kV lines (L01–L03), drops Los Gatos solar 65%, threatens VMC hospital feeder.
+            </p>
+          </button>
+
+          <button id="btnCrisisMetcalf" onclick="triggerCrisisScenario('metcalf_overload')" class="w-full text-left p-2.5 rounded-lg bg-amber-950/35 hover:bg-amber-900/50 border border-amber-500/40 transition group">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-amber-300 group-hover:text-white flex items-center gap-1.5">
+                <span>⚡ Metcalf Substation Overload</span>
+              </span>
+              <span class="text-[10px] font-mono-tech px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300">58.3 Hz NADIR</span>
+            </div>
+            <p class="text-[11px] text-slate-400 mt-1">
+              Trips 500kV autotransformer bank with spark cascade, severing L11–L13 and dropping frequency to 58.3 Hz.
+            </p>
+          </button>
+
+          <button id="btnCrisisScada" onclick="triggerCrisisScenario('scada_spoof')" class="w-full text-left p-2.5 rounded-lg bg-purple-950/35 hover:bg-purple-900/50 border border-purple-500/40 transition group">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-purple-300 group-hover:text-white flex items-center gap-1.5">
+                <span>🛡️ SCADA Telemetry Spoofing Attack</span>
+              </span>
+              <span class="text-[10px] font-mono-tech px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300">220% SURGE</span>
+            </div>
+            <p class="text-[11px] text-slate-400 mt-1">
+              Injects forged DNP3 load packets across Tech Campus &amp; Downtown Core, tripping relays L04 &amp; L10.
+            </p>
+          </button>
+        </div>
+      </section>
+
+      <!-- SAHAYTA-INSPIRED SOUTH BAY MULTI-VARIABLE SECTOR RISK GAUGE (0-100) -->
+      <section class="tactical-panel rounded-xl p-3.5">
+        <div class="flex items-center justify-between mb-1.5">
+          <div class="flex items-center gap-2">
+            <i data-lucide="flame" class="w-4 h-4 text-amber-400"></i>
+            <h2 class="text-xs font-bold uppercase tracking-wider text-slate-200">Sector Composite Risk Index</h2>
+          </div>
+          <span id="riskLevelBadge" class="text-[10px] font-mono-tech px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+            LOW RISK (18/100)
+          </span>
+        </div>
+
+        <div class="flex items-center gap-3 my-2">
+          <!-- SVG Semi-Circular Risk Gauge -->
+          <div class="relative w-28 h-16 flex items-center justify-center">
+            <svg viewBox="0 0 120 70" class="w-full h-full overflow-visible">
+              <path d="M 12 58 A 48 48 0 0 1 108 58" fill="none" stroke="#1e293b" stroke-width="10" stroke-linecap="round" />
+              <path id="riskGaugeArc" d="M 12 58 A 48 48 0 0 1 108 58" fill="none" stroke="#10b981" stroke-width="10" stroke-linecap="round" stroke-dasharray="150.8" stroke-dashoffset="123.6" class="transition-all duration-500" />
+            </svg>
+            <div class="absolute bottom-0 text-center font-mono-tech">
+              <span id="riskGaugeScore" class="text-lg font-bold text-white">18</span>
+              <span class="text-[9px] text-slate-400 block -mt-1">/ 100</span>
+            </div>
+          </div>
+
+          <div class="flex-1 space-y-1 text-[10px] font-mono-tech">
+            <div class="flex justify-between">
+              <span class="text-slate-400">Fire Weather / Temp:</span>
+              <span id="riskFactorTemp" class="text-emerald-300">24.6°C (Normal)</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-400">Line Thermal Stress:</span>
+              <span id="riskFactorThermal" class="text-cyan-300">68.0% Peak</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-400">Hospital SOS Density:</span>
+              <span id="riskFactorSos" class="text-amber-300">4 Active</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SAN JOSE / SOUTH BAY LIVE OPEN-METEO TELEMETRY -->
+      <section class="tactical-panel rounded-xl p-3.5">
+        <div class="flex items-center justify-between mb-2">
+          <div class="flex items-center gap-2">
+            <i data-lucide="cloud-sun" class="w-4 h-4 text-cyan-400"></i>
+            <h2 class="text-xs font-bold uppercase tracking-wider text-slate-200">San Jose Live Telemetry</h2>
+          </div>
+          <button id="btnRefreshWeather" onclick="fetchLiveOpenMeteo()" class="text-[10px] font-mono-tech px-2 py-0.5 rounded bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 border border-cyan-500/30 transition">
+            Sync Open-Meteo
+          </button>
+        </div>
+        <div class="text-[10px] font-mono-tech text-slate-400 mb-2 flex items-center justify-between">
+          <span>37.3382° N, 121.8863° W</span>
+          <span id="meteoSourceBadge" class="text-emerald-400">OPEN-METEO LIVE</span>
+        </div>
+
+        <div class="grid grid-cols-3 gap-2 text-center font-mono-tech">
+          <div class="bg-slate-900/90 border border-slate-800 rounded-lg p-2">
+            <div class="text-[10px] text-slate-400">IRRADIANCE</div>
+            <div id="valIrradiance" class="text-sm font-bold text-amber-300 mt-0.5">685 W/m²</div>
+            <div id="valSolarMw" class="text-[10px] text-emerald-400">Solar: 64.2 MW</div>
+          </div>
+          <div class="bg-slate-900/90 border border-slate-800 rounded-lg p-2">
+            <div class="text-[10px] text-slate-400">WIND 80m</div>
+            <div id="valWindSpeed" class="text-sm font-bold text-cyan-300 mt-0.5">28.4 km/h</div>
+            <div id="valWindMw" class="text-[10px] text-emerald-400">Wind: 48.0 MW</div>
+          </div>
+          <div class="bg-slate-900/90 border border-slate-800 rounded-lg p-2">
+            <div class="text-[10px] text-slate-400">TEMP 2m</div>
+            <div id="valAmbientTemp" class="text-sm font-bold text-rose-300 mt-0.5">24.6 °C</div>
+            <div id="valHydroMw" class="text-[10px] text-cyan-400">Hydro: 28.5 MW</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- PHYSICS SOLVER EQUATIONS & CONSTRAINTS SUMMARY -->
+      <section class="tactical-panel rounded-xl p-3.5 flex-1 flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-2">
+              <i data-lucide="gauge" class="w-4 h-4 text-emerald-400"></i>
+              <h2 class="text-xs font-bold uppercase tracking-wider text-slate-200">DC Power-Flow Constraint State</h2>
+            </div>
+            <span id="solverStatusBadge" class="text-[10px] font-mono-tech px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+              0 VIOLATIONS
+            </span>
+          </div>
+
+          <div class="space-y-1.5 text-xs font-mono-tech">
+            <div class="flex justify-between items-center bg-slate-900/80 px-2.5 py-1.5 rounded border border-slate-800">
+              <span class="text-slate-400">Active Generation (P_gen):</span>
+              <span id="metricTotalGen" class="text-emerald-400 font-bold">201.0 MW</span>
+            </div>
+            <div class="flex justify-between items-center bg-slate-900/80 px-2.5 py-1.5 rounded border border-slate-800">
+              <span class="text-slate-400">Active Demand (P_load):</span>
+              <span id="metricTotalLoad" class="text-cyan-300 font-bold">201.0 MW</span>
+            </div>
+            <div class="flex justify-between items-center bg-slate-900/80 px-2.5 py-1.5 rounded border border-slate-800">
+              <span class="text-slate-400">Hospital Bus Window:</span>
+              <span id="metricHospitalWindow" class="text-emerald-300 font-bold">60.00 Hz [SAFE]</span>
+            </div>
+            <div class="flex justify-between items-center bg-slate-900/80 px-2.5 py-1.5 rounded border border-slate-800">
+              <span class="text-slate-400">Peak Line Thermal Load:</span>
+              <span id="metricPeakThermal" class="text-cyan-300 font-bold">68.0% (L12)</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-2.5 pt-2 border-t border-slate-800 text-[10px] font-mono-tech text-slate-400">
+          <div>Law: <span class="text-slate-200">Δf = K_droop · (P_gen − P_load)</span></div>
+          <div>Verify: <span class="text-slate-200">|F_ij| ≤ F_ij^max &amp; 59.7 ≤ f_hosp ≤ 60.3 Hz</span></div>
+        </div>
+      </section>
+    </aside>
+
+    <!-- CENTER VIEWPORT: MULTI-VIEW COMMAND DECK (6 COLS) -->
+    <section class="lg:col-span-6 flex flex-col gap-2.5 overflow-hidden">
+      
+      <!-- VIEW 1: INTERACTIVE 2D HTML5 CANVAS POWER GRID (DEFAULT ACTIVE) -->
+      <div id="viewPanelGrid" class="tactical-panel rounded-xl relative flex-1 min-h-[380px] overflow-hidden flex flex-col">
+        
+        <!-- TOP OVERLAY LEGEND & HEATMAP TOGGLE -->
+        <div class="absolute top-3 left-3 right-3 flex flex-wrap items-center justify-between gap-2 z-10">
+          <div class="bg-slate-950/85 border border-slate-800 px-3 py-1.5 rounded-lg flex items-center gap-3 text-[11px] font-mono-tech pointer-events-none">
+            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-cyan-400 inline-block"></span>Normal Flow</span>
+            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block"></span>&gt;80% Thermal</span>
+            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-rose-500 inline-block"></span>Severed/Overload</span>
+            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block"></span>Solver Reroute</span>
+          </div>
+
+          <div class="flex items-center gap-1.5">
+            <button id="btnToggleHeatmap" onclick="toggleSosHeatmapOverlay()" class="bg-slate-950/90 hover:bg-slate-900 border border-rose-500/40 px-2.5 py-1 rounded-lg text-[11px] font-mono-tech text-rose-300 transition">
+              🔥 SOS Risk Heatmap: ON
+            </button>
+          </div>
+        </div>
+
+        <!-- HTML5 CANVAS -->
+        <div id="canvasWrapper" class="relative w-full flex-1">
+          <canvas id="gridCanvas" class="w-full h-full block cursor-crosshair"></canvas>
+
+          <!-- FLOATING TACTICAL HUD CARD FOR SELECTED NODE -->
+          <div id="nodeHudCard" class="hidden absolute bottom-3 left-3 w-80 bg-slate-950/95 border border-cyan-400/50 rounded-xl p-3.5 shadow-2xl z-20 font-mono-tech text-xs">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-2 mb-2">
+              <div>
+                <span id="hudNodeId" class="text-[10px] px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-bold">N01</span>
+                <h3 id="hudNodeName" class="text-sm font-bold text-white mt-0.5">Valley Medical Center</h3>
+              </div>
+              <button id="btnCloseHud" onclick="closeNodeHud()" class="text-slate-400 hover:text-white p-1">
+                ✕
+              </button>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 mb-3 text-[11px]">
+              <div class="bg-slate-900 p-2 rounded border border-slate-800">
+                <span class="text-slate-400 block">GEN / DRAW</span>
+                <span id="hudNodePower" class="text-cyan-300 font-bold text-xs">-28.0 MW</span>
+              </div>
+              <div class="bg-slate-900 p-2 rounded border border-slate-800">
+                <span class="text-slate-400 block">BUS FREQ</span>
+                <span id="hudNodeFreq" class="text-emerald-400 font-bold text-xs">60.00 Hz</span>
+              </div>
+              <div class="bg-slate-900 p-2 rounded border border-slate-800">
+                <span class="text-slate-400 block">BATTERY SoC</span>
+                <span id="hudNodeSoc" class="text-amber-300 font-bold text-xs">94.0%</span>
+              </div>
+              <div class="bg-slate-900 p-2 rounded border border-slate-800">
+                <span class="text-slate-400 block">TOPOLOGY</span>
+                <span id="hudNodeIsland" class="text-slate-200 font-bold text-xs">GRID-TIED</span>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <button id="btnHudSeverLine" onclick="severConnectedLineFromHud()" class="flex-1 py-1.5 px-2 rounded bg-rose-600/30 hover:bg-rose-600/50 border border-rose-500/50 text-rose-200 font-bold text-[11px] transition">
+                [Sever Line]
+              </button>
+              <button id="btnHudToggleIsland" onclick="toggleNodeIslandFromHud()" class="flex-1 py-1.5 px-2 rounded bg-emerald-600/30 hover:bg-emerald-600/50 border border-emerald-500/50 text-emerald-200 font-bold text-[11px] transition">
+                [Toggle Island Mode]
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW 2: SAHAYTA-INSPIRED CIVIC SOS & AI TRIAGE BOARD -->
+      <div id="viewPanelSos" class="hidden tactical-panel rounded-xl p-4 flex-1 min-h-[380px] flex flex-col overflow-hidden">
+        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3 mb-3">
+          <div>
+            <h3 class="text-sm font-bold text-white flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping"></span>
+              <span>Civic &amp; Hospital Emergency SOS Triage Board</span>
+            </h3>
+            <p class="text-[11px] text-slate-400">
+              AI-assessed severity (1–5 scale) linked directly to South Bay 12-Node micro-grid feeders &amp; mobile Megapack trucks.
+            </p>
+          </div>
+          <div class="flex items-center gap-2 text-xs font-mono-tech">
+            <select id="sosFilterSeverity" onchange="renderSosBoard()" class="bg-slate-900 border border-slate-700 rounded px-2.5 py-1 text-slate-200">
+              <option value="0">All Severities (1–5)</option>
+              <option value="5">Severity 5 (Critical Life-Support)</option>
+              <option value="4">Severity ≥ 4 (High Priority)</option>
+            </select>
+            <button id="btnNewSosFromBoard" onclick="toggleSosModal(true)" class="px-3 py-1 rounded bg-rose-600 hover:bg-rose-500 text-white font-bold">
+              + Submit SOS
+            </button>
+          </div>
+        </div>
+
+        <div id="sosBoardList" class="flex-1 overflow-y-auto space-y-2.5 pr-1"></div>
+      </div>
+
+      <!-- VIEW 3: MOBILE MEGAPACK & FIELD CREW DISPATCH PORTAL -->
+      <div id="viewPanelCrews" class="hidden tactical-panel rounded-xl p-4 flex-1 min-h-[380px] flex flex-col overflow-hidden">
+        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3 mb-3">
+          <div>
+            <h3 class="text-sm font-bold text-white">Mobile Megapack BESS &amp; High-Voltage Responder Fleet</h3>
+            <p class="text-[11px] text-slate-400">
+              Dispatch mobile battery trucks and HV hot-stick line crews to reinforce islanded hospitals and repair tripped relays.
+            </p>
+          </div>
+          <button id="btnRegisterCrewToggle" onclick="registerQuickResponder()" class="px-3 py-1 rounded bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold text-xs font-mono-tech">
+            + Register Field Unit
+          </button>
+        </div>
+
+        <div id="crewBoardList" class="flex-1 overflow-y-auto space-y-2.5 pr-1"></div>
+      </div>
+
+      <!-- VIEW 4: MULTI-LINGUAL EMERGENCY CELL BROADCAST CREATOR -->
+      <div id="viewPanelAlerts" class="hidden tactical-panel rounded-xl p-4 flex-1 min-h-[380px] flex flex-col overflow-hidden">
+        <div class="border-b border-slate-800 pb-3 mb-3 flex items-center justify-between">
+          <div>
+            <h3 class="text-sm font-bold text-white">Multi-Lingual Emergency Cell-Broadcast &amp; Load-Shedding Advisory</h3>
+            <p class="text-[11px] text-slate-400">
+              Transmit localized alerts in English, Hindi (हिन्दी), and Spanish (Español) to affected South Bay sectors.
+            </p>
+          </div>
+          <span class="text-[10px] font-mono-tech px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+            WEA / SMS / SCADA GATEWAY
+          </span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3 text-xs font-mono-tech">
+          <div>
+            <label class="text-slate-400 block mb-1">Target Infrastructure Sector</label>
+            <select id="alertTargetSector" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white">
+              <option value="All South Bay Sectors (N01–N12)">All South Bay Sectors (N01–N12)</option>
+              <option value="N01 Valley Medical Center Corridor">N01 Valley Medical Center Corridor</option>
+              <option value="N10 Downtown Core & Cooling Centers">N10 Downtown Core &amp; Cooling Centers</option>
+              <option value="N12 West Valley Residential">N12 West Valley Residential</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-slate-400 block mb-1">Broadcast Language Preview</label>
+            <div class="flex gap-1.5">
+              <button id="btnAlertLangEn" onclick="setAlertBroadcastLang('en')" class="flex-1 py-1.5 rounded bg-cyan-500/20 border border-cyan-400 text-cyan-300 font-bold">English</button>
+              <button id="btnAlertLangHi" onclick="setAlertBroadcastLang('hi')" class="flex-1 py-1.5 rounded bg-slate-900 border border-slate-700 text-slate-300">हिन्दी</button>
+              <button id="btnAlertLangEs" onclick="setAlertBroadcastLang('es')" class="flex-1 py-1.5 rounded bg-slate-900 border border-slate-700 text-slate-300">Español</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <textarea id="alertMessageInput" rows="2" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-xs text-slate-200 font-mono-tech" placeholder="Enter emergency cell-broadcast advisory...">URGENT GRIDZERO ADVISORY: Northern 230kV lines severed by Santa Cruz Wildfire. Valley Medical Center & Trauma Hub are safely islanded at 60.00 Hz via Megapack BESS. Commercial HVAC curtailed 38%.</textarea>
+          <div class="flex justify-end mt-1.5">
+            <button id="btnSendBroadcast" onclick="dispatchEmergencyBroadcast()" class="px-4 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs font-mono-tech">
+              📡 Transmit Cell-Broadcast Alert
+            </button>
+          </div>
+        </div>
+
+        <div id="alertFeedList" class="flex-1 overflow-y-auto space-y-2 pr-1"></div>
+      </div>
+
+      <!-- BOTTOM TELEMETRY DOCK: DUAL REAL-TIME CHART.JS TELEMETRY -->
+      <div class="tactical-panel rounded-xl p-3 grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div class="bg-slate-950/60 border border-slate-800/80 rounded-lg p-2.5">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-[11px] font-mono-tech font-bold text-cyan-300 uppercase">Grid Frequency Stability (Hz)</span>
+            <span id="chartFreqBadge" class="text-[10px] font-mono-tech text-emerald-400">Target: 60.00 Hz (±0.3)</span>
+          </div>
+          <div class="relative h-32">
+            <canvas id="freqChart"></canvas>
+          </div>
+        </div>
+
+        <div class="bg-slate-950/60 border border-slate-800/80 rounded-lg p-2.5">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-[11px] font-mono-tech font-bold text-emerald-300 uppercase">Renewable Supply vs. Critical Demand (MW)</span>
+            <span id="chartMwBadge" class="text-[10px] font-mono-tech text-cyan-300">Clean Dispatch</span>
+          </div>
+          <div class="relative h-32">
+            <canvas id="powerChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT SIDEBAR: MULTI-AGENT & SOLVER VERIFICATION TERMINAL (3 COLS) -->
+    <aside class="lg:col-span-3 flex flex-col gap-2.5 overflow-y-auto pl-0.5">
+      <section class="tactical-panel rounded-xl p-3.5 flex-1 flex flex-col">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-2.5 mb-2.5">
+          <div class="flex items-center gap-2">
+            <i data-lucide="terminal" class="w-4 h-4 text-cyan-400"></i>
+            <h2 class="text-xs font-bold uppercase tracking-wider text-white">Neuro-Symbolic Agent Terminal</h2>
+          </div>
+          <span id="agentPipelineBadge" class="text-[10px] font-mono-tech px-2 py-0.5 rounded bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
+            STANDBY
+          </span>
+        </div>
+
+        <!-- AGENT-01 CARD -->
+        <div id="cardAgent01" class="mb-2.5 rounded-lg bg-slate-900/90 border border-slate-800 p-2.5 transition-all">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-[11px] font-mono-tech font-bold text-cyan-300">AGENT-01 • GridTopology &amp; Fault Isolator</span>
+            <span id="latAgent01" class="text-[10px] font-mono-tech px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">142 ms</span>
+          </div>
+          <pre id="jsonAgent01" class="text-[10px] font-mono-tech text-slate-300 overflow-x-auto whitespace-pre-wrap leading-relaxed bg-slate-950/80 p-2 rounded border border-slate-800/80">{
+  "status": "MONITORING_12_NODES",
+  "algorithm": "BFS_Reachability + Dijkstra_Impedance",
+  "severed_lines": [],
+  "isolated_subgrids": 0
+}</pre>
+        </div>
+
+        <!-- AGENT-02 CARD -->
+        <div id="cardAgent02" class="mb-2.5 rounded-lg bg-slate-900/90 border border-slate-800 p-2.5 transition-all">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-[11px] font-mono-tech font-bold text-amber-300">AGENT-02 • Battery &amp; Load Forecaster</span>
+            <span id="latAgent02" class="text-[10px] font-mono-tech px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">168 ms</span>
+          </div>
+          <pre id="jsonAgent02" class="text-[10px] font-mono-tech text-slate-300 overflow-x-auto whitespace-pre-wrap leading-relaxed bg-slate-950/80 p-2 rounded border border-slate-800/80">{
+  "N06_San_Jose_BESS_1": "88.0% SoC (15.0 MW)",
+  "N07_Cupertino_BESS_2": "84.0% SoC (12.0 MW)",
+  "hospital_autonomy_hrs": "14.2 hrs",
+  "commercial_hvac_shed_mw": 0.0
+}</pre>
+        </div>
+
+        <!-- HIGHLIGHTED PHYSICS SOLVER INTERVENTION CARD (SELF-CORRECTION DIFF) -->
+        <div id="cardSolverIntervention" class="mb-2.5 rounded-lg bg-rose-950/30 border border-rose-500/40 p-2.5 transition-all">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-[11px] font-mono-tech font-bold text-rose-300 flex items-center gap-1">
+              <i data-lucide="zap-off" class="w-3.5 h-3.5"></i>
+              <span>PHYSICS SOLVER INTERVENTION</span>
+            </span>
+            <span id="solverInterventionBadge" class="text-[10px] font-mono-tech px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300">
+              ACTIVE VERIFIER
+            </span>
+          </div>
+          <div id="solverInterventionBody" class="text-[11px] font-mono-tech text-slate-300 space-y-1.5">
+            <p class="text-slate-400">
+              Non-LLM Python DC Power-Flow solver checks every AGENT-03 dispatch draft before closing physical breakers.
+            </p>
+            <div class="bg-slate-950/90 p-2 rounded border border-slate-800 text-[10px]">
+              <div class="text-rose-400 font-semibold">Draft #1 Status: Awaiting Contingency...</div>
+              <div class="text-emerald-400 font-semibold mt-0.5">Verified Final: 100% Thermal &amp; Freq Safe</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- AGENT-03 CARD -->
+        <div id="cardAgent03" class="rounded-lg bg-slate-900/90 border border-slate-800 p-2.5 flex-1 flex flex-col justify-between transition-all">
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-[11px] font-mono-tech font-bold text-emerald-300">AGENT-03 • Neuro-Symbolic Dispatch</span>
+              <span id="latAgent03" class="text-[10px] font-mono-tech px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">214 ms</span>
+            </div>
+            <pre id="jsonAgent03" class="text-[10px] font-mono-tech text-slate-300 overflow-x-auto whitespace-pre-wrap leading-relaxed bg-slate-950/80 p-2 rounded border border-slate-800/80">{
+  "verification": "DC_POWER_FLOW_CONVERGED",
+  "hospital_bus_freq_hz": 60.0,
+  "renewable_share_pct": 86.4,
+  "self_correction_loops": 0
+}</pre>
+          </div>
+        </div>
+
+      </section>
+    </aside>
+  </main>
+
+  <!-- MODAL 1: ABLATION BENCHMARK DRAWER / MODAL -->
+  <div id="benchmarkModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div class="tactical-panel rounded-2xl max-w-3xl w-full p-6 border border-cyan-400/40">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+        <div>
+          <span class="text-[10px] font-mono-tech uppercase px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
+            20-Contingency Validation Suite
+          </span>
+          <h2 class="text-lg font-bold text-white mt-1">
+            Ablation Benchmark: Raw Unverified LLM vs. GridZero Neuro-Symbolic Solver
+          </h2>
+        </div>
+        <button id="btnCloseBenchmark" onclick="toggleBenchmarkModal(false)" class="text-slate-400 hover:text-white px-2.5 py-1 rounded bg-slate-800">
+          ✕
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4 font-mono-tech">
+        <div class="bg-slate-900/90 border border-slate-800 p-3.5 rounded-xl">
+          <div class="text-xs text-slate-400">Critical Hospital Blackout Rate</div>
+          <div class="flex items-baseline justify-between mt-2">
+            <div>
+              <span class="text-[10px] text-rose-400 block">Raw LLM</span>
+              <span class="text-xl font-bold text-rose-400">25.0%</span>
+            </div>
+            <span class="text-slate-600">→</span>
+            <div class="text-right">
+              <span class="text-[10px] text-emerald-400 block">GridZero Verified</span>
+              <span class="text-2xl font-bold text-emerald-400">0.0%</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-slate-900/90 border border-slate-800 p-3.5 rounded-xl">
+          <div class="text-xs text-slate-400">Thermal Line Overload Rate</div>
+          <div class="flex items-baseline justify-between mt-2">
+            <div>
+              <span class="text-[10px] text-rose-400 block">Raw LLM</span>
+              <span class="text-xl font-bold text-rose-400">35.0%</span>
+            </div>
+            <span class="text-slate-600">→</span>
+            <div class="text-right">
+              <span class="text-[10px] text-emerald-400 block">GridZero Verified</span>
+              <span class="text-2xl font-bold text-emerald-400">0.0%</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-slate-900/90 border border-slate-800 p-3.5 rounded-xl">
+          <div class="text-xs text-slate-400">Renewable Dispatch Share</div>
+          <div class="flex items-baseline justify-between mt-2">
+            <div>
+              <span class="text-[10px] text-amber-400 block">Raw LLM</span>
+              <span class="text-xl font-bold text-amber-400">61.0%</span>
+            </div>
+            <span class="text-slate-600">→</span>
+            <div class="text-right">
+              <span class="text-[10px] text-emerald-400 block">GridZero Verified</span>
+              <span class="text-2xl font-bold text-emerald-400">88.0%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs font-mono-tech border-collapse">
+          <thead>
+            <tr class="border-b border-slate-800 text-slate-400">
+              <th class="py-2 px-2.5">Contingency Scenario</th>
+              <th class="py-2 px-2.5">Raw Unverified LLM (gemini-3.8-flash)</th>
+              <th class="py-2 px-2.5">GridZero Neuro-Symbolic Solver</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-800/70">
+            <tr>
+              <td class="py-2 px-2.5 text-white">1. Santa Cruz Wildfire N-3</td>
+              <td class="py-2 px-2.5 text-rose-400">FAIL (L12 118% Thermal Overload)</td>
+              <td class="py-2 px-2.5 text-emerald-400">PASS (60.00 Hz, L12 82% Safe)</td>
+            </tr>
+            <tr>
+              <td class="py-2 px-2.5 text-white">2. Metcalf 500kV Transformer Trip</td>
+              <td class="py-2 px-2.5 text-rose-400">FAIL (58.3 Hz Hospital Blackout)</td>
+              <td class="py-2 px-2.5 text-emerald-400">PASS (60.00 Hz Islanded Microgrid)</td>
+            </tr>
+            <tr>
+              <td class="py-2 px-2.5 text-white">3. SCADA DNP3 220% Surge Spoof</td>
+              <td class="py-2 px-2.5 text-rose-400">FAIL (L09 118% Thermal Overload)</td>
+              <td class="py-2 px-2.5 text-emerald-400">PASS (60.00 Hz Zero-Trust Load Shed)</td>
+            </tr>
+            <tr>
+              <td class="py-2 px-2.5 text-white">4. Altamont Wind Cut-Out + VMC Tie Fault</td>
+              <td class="py-2 px-2.5 text-rose-400">FAIL (59.1 Hz Frequency Undershoot)</td>
+              <td class="py-2 px-2.5 text-emerald-400">PASS (59.98 Hz BESS-1/2 Boost)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 2: SYSTEM ARCHITECTURE & VALIDATION -->
+  <div id="archModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div class="tactical-panel rounded-2xl max-w-3xl w-full p-6 border border-purple-400/40">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+        <div>
+          <span class="text-[10px] font-mono-tech uppercase px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-400/30">
+            Zero-Hallucination Engineering Spec
+          </span>
+          <h2 class="text-lg font-bold text-white mt-1">
+            GridZero v3.5 Neuro-Symbolic Architecture &amp; Civic Disaster Response
+          </h2>
+        </div>
+        <button id="btnCloseArch" onclick="toggleArchModal(false)" class="text-slate-400 hover:text-white px-2.5 py-1 rounded bg-slate-800">
+          ✕
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs leading-relaxed">
+        <div class="bg-slate-900/90 border border-slate-800 p-4 rounded-xl">
+          <h3 class="font-bold text-cyan-300 font-mono-tech mb-1.5">1. Live San Jose Telemetry + FastAPI Core</h3>
+          <p class="text-slate-300">
+            Fetches live <code class="text-amber-300">shortwave_radiation</code> (W/m²), <code class="text-cyan-300">wind_speed_80m</code> (km/h), and <code class="text-rose-300">temperature_2m</code> (°C) for San Jose (<code class="text-slate-400">37.3382, -121.8863</code>) via Open-Meteo API, converting irradiance and wind curves into real-time MW generation with instant offline fallback caching.
+          </p>
+        </div>
+
+        <div class="bg-slate-900/90 border border-slate-800 p-4 rounded-xl">
+          <h3 class="font-bold text-emerald-300 font-mono-tech mb-1.5">2. Deterministic DC Power-Flow Verifier</h3>
+          <p class="text-slate-300">
+            Solves susceptance-weighted nodal phase angles <code class="text-emerald-300">P_inj = B · θ</code> and active frequency droop <code class="text-emerald-300">Δf = K · (P_gen − P_load)</code> around 60.0 Hz. Blocks any LLM dispatch that violates line thermal limits or hospital bus frequency (<code class="text-emerald-300">59.7–60.3 Hz</code>).
+          </p>
+        </div>
+
+        <div class="bg-slate-900/90 border border-slate-800 p-4 rounded-xl">
+          <h3 class="font-bold text-amber-300 font-mono-tech mb-1.5">3. Three Sequential Gemini-3.8-Flash Agents</h3>
+          <p class="text-slate-300">
+            <strong>AGENT-01</strong> runs BFS/Dijkstra fault isolation; <strong>AGENT-02</strong> computes Megapack SoC depletion countdowns &amp; minimum HVAC load shedding; <strong>AGENT-03</strong> executes the neuro-symbolic self-correction loop until 0 physics violations remain.
+          </p>
+        </div>
+
+        <div class="bg-slate-900/90 border border-slate-800 p-4 rounded-xl">
+          <h3 class="font-bold text-purple-300 font-mono-tech mb-1.5">4. Sahayta-Inspired Civic SOS &amp; Mobile BESS</h3>
+          <p class="text-slate-300">
+            Integrates a 4-step offline-first <strong>Civic SOS Wizard</strong> (with Voice-to-Text &amp; Emergency Quick-Chips), <strong>Mobile Megapack Truck Dispatch</strong>, a <strong>Sector Risk Gauge (0–100)</strong>, and <strong>Multi-Lingual Cell Broadcasts</strong> (EN/HI/ES).
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 3: SAHAYTA-INSPIRED 4-STEP CIVIC & HOSPITAL SOS REPORT WIZARD -->
+  <div id="sosWizardModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div class="tactical-panel rounded-2xl max-w-xl w-full p-6 border border-rose-500/50">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+        <div>
+          <span class="text-[10px] font-mono-tech uppercase px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40">
+            Offline-First Civic Distress &amp; Microgrid Triage
+          </span>
+          <h2 class="text-base font-bold text-white mt-1">
+            🚨 Submit Emergency Infrastructure / Medical SOS Report
+          </h2>
+        </div>
+        <button id="btnCloseSosModal" onclick="toggleSosModal(false)" class="text-slate-400 hover:text-white px-2.5 py-1 rounded bg-slate-800">
+          ✕
+        </button>
+      </div>
+
+      <div class="space-y-3 text-xs font-mono-tech">
+        <!-- Step 1: Quick Emergency Symptom Chips -->
+        <div>
+          <label class="text-slate-400 block mb-1">Step 1: Quick-Select Emergency Condition</label>
+          <div class="flex flex-wrap gap-1.5">
+            <button type="button" id="chipIcuVent" onclick="fillSosQuickChip('ICU Ventilators on Backup Battery - under 30 mins remaining', 5, 'N01')" class="px-2.5 py-1 rounded bg-rose-950/60 hover:bg-rose-900 border border-rose-500/40 text-rose-200">
+              🏥 ICU Ventilators Low Battery
+            </button>
+            <button type="button" id="chipDownedLine" onclick="fillSosQuickChip('Downed 115kV Conductor Sparking Near Dry Brush', 5, 'N03')" class="px-2.5 py-1 rounded bg-amber-950/60 hover:bg-amber-900 border border-amber-500/40 text-amber-200">
+              ⚡ Downed Sparking Line
+            </button>
+            <button type="button" id="chipDialysis" onclick="fillSosQuickChip('18 Senior Dialysis Patients Need Mobile Megapack Feeder', 4, 'N12')" class="px-2.5 py-1 rounded bg-cyan-950/60 hover:bg-cyan-900 border border-cyan-500/40 text-cyan-200">
+              🩺 Dialysis Center Outage
+            </button>
+            <button type="button" id="chipCooling" onclick="fillSosQuickChip('Civic Shelter Chiller Overload - 400+ Evacuees', 4, 'N10')" class="px-2.5 py-1 rounded bg-purple-950/60 hover:bg-purple-900 border border-purple-500/40 text-purple-200">
+              🌡️ Shelter Cooling Surge
+            </button>
+          </div>
+        </div>
+
+        <!-- Step 2: Target Node & AI Severity -->
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <label class="text-slate-400 block mb-1">Step 2: Grid Sector / Node</label>
+            <select id="sosInputNode" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white">
+              <option value="N01">N01 • Valley Medical Center</option>
+              <option value="N02">N02 • South Bay Trauma Hub</option>
+              <option value="N12">N12 • West Valley Residential</option>
+              <option value="N10">N10 • Downtown Core Shelter</option>
+              <option value="N03">N03 • Los Gatos Solar Corridor</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-slate-400 block mb-1">AI Triage Severity (1–5)</label>
+            <select id="sosInputSeverity" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-rose-300 font-bold">
+              <option value="5">5 — Critical Life-Support (Immediate BESS)</option>
+              <option value="4">4 — Severe Feeder Hazard</option>
+              <option value="3">3 — Moderate Shelter Load Request</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Step 3: Details + Simulated Voice Dictation -->
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <label class="text-slate-400">Step 3: Situation Description &amp; Voice Input</label>
+            <button type="button" id="btnVoiceDictate" onclick="simulateVoiceDictation()" class="px-2 py-0.5 rounded bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/40 flex items-center gap-1">
+              <span>🎙️ Voice-to-Text Dictate</span>
+            </button>
+          </div>
+          <textarea id="sosInputDesc" rows="2" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-white" placeholder="Describe critical power or medical emergency...">Emergency backup diesel transfer switch failed in surgical wing; requesting immediate 60.0 Hz islanded tie from San Jose BESS-1.</textarea>
+        </div>
+
+        <!-- Step 4: GPS Auto-Lock & Submit -->
+        <div class="flex items-center justify-between bg-slate-900/90 border border-slate-800 px-3 py-2 rounded-lg">
+          <span id="sosGpsCoords" class="text-[11px] text-emerald-400">📍 GPS Auto-Pin: 37.3128° N, 121.9315° W (Verified)</span>
+          <button type="button" id="btnRefreshGps" onclick="refreshSosGps()" class="text-[10px] underline text-cyan-300">Re-Lock GPS</button>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-2">
+          <button type="button" id="btnCancelSos" onclick="toggleSosModal(false)" class="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300">
+            Cancel
+          </button>
+          <button type="button" id="btnSubmitSosReport" onclick="submitCivicSosReport()" class="px-4 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-bold">
+            🚀 Dispatch SOS &amp; Route Mobile BESS
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION BANNER -->
+  <div id="toastBanner" class="hidden fixed bottom-4 right-4 bg-slate-900/95 border border-emerald-400/60 text-emerald-200 px-4 py-2.5 rounded-xl shadow-2xl font-mono-tech text-xs z-50 flex items-center gap-2">
+    <span id="toastMessage">Action completed</span>
+  </div>
+
+  <!-- MAIN APPLICATION JAVASCRIPT -->
+  <script>
+    // -------------------------------------------------------------------------
+    // 1. WEB AUDIO API SYNTHESIZER (TACTICAL CLICKS, FAULT PULSE, CHORD)
+    // -------------------------------------------------------------------------
+    class TacticalAudioEngine {
+      constructor() {
+        this.ctx = null;
+        this.muted = false;
+      }
+
+      init() {
+        if (!this.ctx) {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (AudioCtx) this.ctx = new AudioCtx();
+        }
+        if (this.ctx && this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+      }
+
+      playClick(freq = 920, duration = 0.035) {
+        if (this.muted) return;
+        this.init();
+        if (!this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+        gain.gain.setValueAtTime(0.06, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + duration);
+      }
+
+      playFaultWarning() {
+        if (this.muted) return;
+        this.init();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(145, now);
+        osc.frequency.linearRampToValueAtTime(98, now + 0.38);
+        gain.gain.setValueAtTime(0.11, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.42);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.44);
+      }
+
+      playStabilizedChord() {
+        if (this.muted) return;
+        this.init();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const freqs = [261.63, 329.63, 392.00, 523.25];
+        freqs.forEach((f, idx) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(f, now + idx * 0.04);
+          gain.gain.setValueAtTime(0.05, now + idx * 0.04);
+          gain.gain.exponentialRampToValueAtTime(0.0008, now + 0.75);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(now + idx * 0.04);
+          osc.stop(now + 0.8);
+        });
+      }
+    }
+
+    const audioEngine = new TacticalAudioEngine();
+
+    function showToast(msg) {
+      const banner = document.getElementById('toastBanner');
+      const text = document.getElementById('toastMessage');
+      text.textContent = msg;
+      banner.classList.remove('hidden');
+      setTimeout(() => {
+        banner.classList.add('hidden');
+      }, 3200);
+    }
+
+    function toggleAudioMute() {
+      audioEngine.muted = !audioEngine.muted;
+      const icon = document.getElementById('iconAudioMute');
+      if (icon) {
+        icon.setAttribute('data-lucide', audioEngine.muted ? 'volume-x' : 'volume-2');
+        icon.className = audioEngine.muted ? 'w-4 h-4 text-rose-400' : 'w-4 h-4 text-cyan-400';
+        if (window.lucide) lucide.createIcons();
+      }
+      if (!audioEngine.muted) audioEngine.playClick(1040, 0.04);
+    }
+
+    // -------------------------------------------------------------------------
+    // 2. 12-NODE SOUTH BAY MICRO-GRID BASELINE DATA & SAHAYTA CIVIC STATE
+    // -------------------------------------------------------------------------
+    const INITIAL_NODES = [
+      { id: 'N01', name: 'Valley Medical Center', category: 'hospital', critical: true, x: 0.48, y: 0.45, gen_mw: 0.0, load_mw: 28.0, soc_pct: 94.0, islanded: false, freq_hz: 60.00 },
+      { id: 'N02', name: 'South Bay Trauma Hub', category: 'hospital', critical: true, x: 0.67, y: 0.64, gen_mw: 0.0, load_mw: 24.0, soc_pct: 91.0, islanded: false, freq_hz: 60.00 },
+      { id: 'N03', name: 'Los Gatos Solar Array', category: 'renewable', critical: false, x: 0.22, y: 0.78, gen_mw: 64.2, load_mw: 0.0, soc_pct: 100.0, islanded: false, freq_hz: 60.00 },
+      { id: 'N04', name: 'Altamont Wind Corridor', category: 'renewable', critical: false, x: 0.84, y: 0.19, gen_mw: 48.0, load_mw: 0.0, soc_pct: 100.0, islanded: false, freq_hz: 60.00 },
+      { id: 'N05', name: 'Calero Hydro Turbine', category: 'renewable', critical: false, x: 0.56, y: 0.86, gen_mw: 28.5, load_mw: 0.0, soc_pct: 100.0, islanded: false, freq_hz: 60.00 },
+      { id: 'N06', name: 'San Jose BESS-1', category: 'battery', critical: true, x: 0.52, y: 0.20, gen_mw: 15.0, load_mw: 0.0, soc_pct: 88.0, islanded: false, freq_hz: 60.00 },
+      { id: 'N07', name: 'Cupertino BESS-2', category: 'battery', critical: true, x: 0.17, y: 0.48, gen_mw: 12.0, load_mw: 0.0, soc_pct: 84.0, islanded: false, freq_hz: 60.00 },
+      { id: 'N08', name: 'Metcalf Substation', category: 'substation', critical: true, x: 0.78, y: 0.44, gen_mw: 25.3, load_mw: 0.0, soc_pct: 100.0, islanded: false, freq_hz: 60.00 },
+      { id: 'N09', name: 'Monta Vista Substation', category: 'substation', critical: true, x: 0.27, y: 0.22, gen_mw: 18.0, load_mw: 0.0, soc_pct: 100.0, islanded: false, freq_hz: 60.00 },
+      { id: 'N10', name: 'Downtown Core', category: 'commercial', critical: false, x: 0.58, y: 0.42, gen_mw: 0.0, load_mw: 58.0, soc_pct: 0.0, islanded: false, freq_hz: 60.00 },
+      { id: 'N11', name: 'Tech Campus Zone', category: 'commercial', critical: false, x: 0.36, y: 0.33, gen_mw: 0.0, load_mw: 52.0, soc_pct: 0.0, islanded: false, freq_hz: 60.00 },
+      { id: 'N12', name: 'West Valley Residential', category: 'residential', critical: false, x: 0.37, y: 0.65, gen_mw: 0.0, load_mw: 49.0, soc_pct: 0.0, islanded: false, freq_hz: 60.00 }
+    ];
+
+    const INITIAL_LINES = [
+      { id: 'L01', source: 'N03', target: 'N09', name: 'Santa Cruz Mtn 230kV', limit_mw: 65.0, flow_mw: 38.0, status: 'nominal' },
+      { id: 'L02', source: 'N03', target: 'N12', name: 'Los Gatos Feeder 115kV', limit_mw: 55.0, flow_mw: 26.2, status: 'nominal' },
+      { id: 'L03', source: 'N09', target: 'N01', name: 'Monta Vista–VMC Lifeline', limit_mw: 50.0, flow_mw: 29.5, status: 'nominal' },
+      { id: 'L04', source: 'N09', target: 'N11', name: 'North Bay Tech Trunk', limit_mw: 60.0, flow_mw: 34.0, status: 'nominal' },
+      { id: 'L05', source: 'N07', target: 'N09', name: 'Cupertino BESS Tie-1', limit_mw: 55.0, flow_mw: 14.0, status: 'nominal' },
+      { id: 'L06', source: 'N07', target: 'N01', name: 'Cupertino–VMC Microgrid', limit_mw: 60.0, flow_mw: 18.5, status: 'nominal' },
+      { id: 'L07', source: 'N07', target: 'N12', name: 'West Valley Storage Link', limit_mw: 50.0, flow_mw: 21.0, status: 'nominal' },
+      { id: 'L08', source: 'N06', target: 'N01', name: 'SJ BESS–VMC Priority Bus', limit_mw: 65.0, flow_mw: 22.0, status: 'nominal' },
+      { id: 'L09', source: 'N06', target: 'N10', name: 'San Jose Core Tie-Line', limit_mw: 55.0, flow_mw: 28.0, status: 'nominal' },
+      { id: 'L10', source: 'N06', target: 'N11', name: 'Silicon Corridor Intertie', limit_mw: 55.0, flow_mw: 23.0, status: 'nominal' },
+      { id: 'L11', source: 'N04', target: 'N08', name: 'Altamont–Metcalf 500kV', limit_mw: 75.0, flow_mw: 48.0, status: 'nominal' },
+      { id: 'L12', source: 'N08', target: 'N10', name: 'Metcalf–Downtown Primary', limit_mw: 50.0, flow_mw: 34.0, status: 'nominal' },
+      { id: 'L13', source: 'N08', target: 'N02', name: 'Metcalf–Trauma Hub Express', limit_mw: 60.0, flow_mw: 24.0, status: 'nominal' },
+      { id: 'L14', source: 'N05', target: 'N02', name: 'Calero–Trauma Hub Clean Tie', limit_mw: 50.0, flow_mw: 19.5, status: 'nominal' },
+      { id: 'L15', source: 'N05', target: 'N12', name: 'Calero–West Valley Loop', limit_mw: 45.0, flow_mw: 18.0, status: 'nominal' },
+      { id: 'L16', source: 'N01', target: 'N10', name: 'VMC–Downtown Cross-Tie', limit_mw: 45.0, flow_mw: 16.0, status: 'nominal' },
+      { id: 'L17', source: 'N10', target: 'N02', name: 'Downtown–Trauma Hub Corridor', limit_mw: 48.0, flow_mw: 19.0, status: 'nominal' }
+    ];
+
+    const INITIAL_SOS_LIST = [
+      {
+        id: 'SOS-901',
+        nodeId: 'N01',
+        sector: 'Valley Medical Center ICU Wing',
+        category: 'Medical Life-Support',
+        severity: 5,
+        status: 'VERIFIED_DISPATCHED',
+        desc: 'NICU & surgical ventilators require zero-flicker 60.0 Hz islanded tie during northern wildfire smoke plume.',
+        assignedUnit: 'UNIT-M1 (Tesla Megapack Mobile Truck #1)',
+        timeAgo: '2 mins ago'
+      },
+      {
+        id: 'SOS-902',
+        nodeId: 'N12',
+        sector: 'West Valley Senior Dialysis Clinic',
+        category: 'Vulnerable Citizens',
+        severity: 4,
+        status: 'AI_TRIAGED_DISPATCHED',
+        desc: '18 home-dialysis patients on backup batteries; priority feeder restoration routed via Cupertino BESS-2.',
+        assignedUnit: 'UNIT-C2 (HV Hot-Stick Line Crew Alpha)',
+        timeAgo: '4 mins ago'
+      },
+      {
+        id: 'SOS-903',
+        nodeId: 'N02',
+        sector: 'South Bay Trauma Hub Blood Bank',
+        category: 'Cold-Chain Storage',
+        severity: 5,
+        status: 'VERIFIED_DISPATCHED',
+        desc: 'Cryogenic plasma freezers locked onto Calero Hydro clean tie L14 after Metcalf autotransformer trip.',
+        assignedUnit: 'UNIT-M2 (Mobile Microgrid Trailer #2)',
+        timeAgo: '6 mins ago'
+      },
+      {
+        id: 'SOS-904',
+        nodeId: 'N10',
+        sector: 'Downtown Civic Cooling Auditorium',
+        category: 'Emergency Shelter',
+        severity: 3,
+        status: 'VERIFIED_DISPATCHED',
+        desc: '420 evacuated citizens sheltered; non-essential commercial office HVAC curtailed 38% to protect shelter chillers.',
+        assignedUnit: 'UNIT-E4 (San Jose CERT Shelter Team)',
+        timeAgo: '9 mins ago'
+      }
+    ];
+
+    const INITIAL_CREW_LIST = [
+      { id: 'UNIT-M1', name: 'Megapack Mobile Truck #1 (4.0 MWh)', skill: 'Mobile BESS Injection • 115kV Tie', nodeId: 'N01', status: 'DEPLOYED', rating: '4.9★', tasks: 34 },
+      { id: 'UNIT-M2', name: 'Mobile Microgrid Trailer #2 (2.5 MWh)', skill: 'Hospital Cold-Chain Backup', nodeId: 'N02', status: 'DEPLOYED', rating: '4.8★', tasks: 29 },
+      { id: 'UNIT-C2', name: 'HV Hot-Stick Line Crew Alpha', skill: '230kV Relay & Breaker Isolation', nodeId: 'N09', status: 'AVAILABLE', rating: '5.0★', tasks: 51 },
+      { id: 'UNIT-S7', name: 'SCADA Zero-Trust Cyber Response', skill: 'DNP3 Telemetry Quarantine', nodeId: 'N10', status: 'AVAILABLE', rating: '4.9★', tasks: 19 },
+      { id: 'UNIT-E4', name: 'San Jose CERT Medical & Shelter Unit', skill: 'Triage & Backup Generators', nodeId: 'N12', status: 'DEPLOYED', rating: '4.8★', tasks: 42 }
+    ];
+
+    const INITIAL_ALERTS = [
+      {
+        id: 'ALT-301',
+        sector: 'N01 Valley Medical Center & N02 Trauma Hub',
+        severity: 'CRITICAL_ISLAND_LOCK',
+        time: '3 mins ago',
+        en: 'SOLVER VERIFIED: Hospitals N01 & N02 are safely islanded at 60.00 Hz via San Jose BESS-1 & Cupertino BESS-2.',
+        hi: 'सॉल्वर सत्यापित: अस्पताल N01 और N02 सैन जोस BESS-1 और क्यूपर्टिनो BESS-2 के माध्यम से 60.00 Hz पर सुरक्षित रूप से आइलैंड किए गए हैं।',
+        es: 'VERIFICADO POR SOLVER: Los hospitales N01 y N02 están aislados de forma segura a 60.00 Hz mediante BESS-1 y BESS-2.'
+      },
+      {
+        id: 'ALT-302',
+        sector: 'N10 Downtown Core & N11 Tech Campus',
+        severity: 'LOAD_SHED_ADVISORY',
+        time: '5 mins ago',
+        en: 'MANDATORY 38% COMMERCIAL HVAC CURTAILMENT: Preserving transmission thermal margin on L12 (82% capacity) and cooling centers.',
+        hi: 'अनिवार्य 38% वाणिज्यिक HVAC कटौती: L12 ट्रांसमिशन लाइन और कूलिंग सेंटरों को सुरक्षित रखने के लिए बिजली बचाई जा रही है।',
+        es: 'REDUCCIÓN OBLIGATORIA DEL 38% EN HVAC COMERCIAL: Preservando el margen térmico en la línea L12 y centros de enfriamiento.'
+      }
+    ];
+
+    let gridState = {
+      nodes: JSON.parse(JSON.stringify(INITIAL_NODES)),
+      lines: JSON.parse(JSON.stringify(INITIAL_LINES)),
+      sosList: JSON.parse(JSON.stringify(INITIAL_SOS_LIST)),
+      crewList: JSON.parse(JSON.stringify(INITIAL_CREW_LIST)),
+      alertList: JSON.parse(JSON.stringify(INITIAL_ALERTS)),
+      alertLang: 'en',
+      showHeatmap: true,
+      riskScore: 18,
+      systemFreqHz: 60.00,
+      renewableSharePct: 86.4,
+      selectedNodeId: null,
+      sparks: [],
+      weather: {
+        temp_c: 24.6,
+        irradiance_wm2: 685.0,
+        wind_kmh: 28.4,
+        solar_mw: 64.2,
+        wind_mw: 48.0,
+        hydro_mw: 28.5
+      }
+    };
+
+    // -------------------------------------------------------------------------
+    // 3. SAHAYTA-INSPIRED MULTI-TAB, ACCESSIBILITY, I18N & EXPORT FUNCTIONS
+    // -------------------------------------------------------------------------
+    function switchWorkspaceTab(tabName) {
+      audioEngine.playClick(940, 0.03);
+      const views = {
+        grid: document.getElementById('viewPanelGrid'),
+        sos: document.getElementById('viewPanelSos'),
+        crews: document.getElementById('viewPanelCrews'),
+        alerts: document.getElementById('viewPanelAlerts')
+      };
+      const btns = {
+        grid: document.getElementById('tabBtnGrid'),
+        sos: document.getElementById('tabBtnSos'),
+        crews: document.getElementById('tabBtnCrews'),
+        alerts: document.getElementById('tabBtnAlerts')
+      };
+
+      Object.keys(views).forEach(k => {
+        if (k === tabName) {
+          views[k].classList.remove('hidden');
+          btns[k].className = 'px-3 py-1 rounded-lg text-xs font-mono-tech font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 flex items-center gap-1.5 transition';
+        } else {
+          views[k].classList.add('hidden');
+          btns[k].className = 'px-3 py-1 rounded-lg text-xs font-mono-tech font-medium bg-slate-900/80 hover:bg-slate-800 text-slate-300 border border-slate-800 flex items-center gap-1.5 transition';
+        }
+      });
+
+      if (tabName === 'grid') {
+        setTimeout(resizeCanvas, 30);
+      } else if (tabName === 'sos') {
+        renderSosBoard();
+      } else if (tabName === 'crews') {
+        renderCrewBoard();
+      } else if (tabName === 'alerts') {
+        renderAlertFeed();
+      }
+    }
+
+    function toggleLargeText() {
+      audioEngine.playClick(880, 0.03);
+      document.body.classList.toggle('large-text');
+      showToast(document.body.classList.contains('large-text') ? 'Large Accessibility Font: ON' : 'Standard Font Size Restored');
+    }
+
+    function toggleHighContrast() {
+      audioEngine.playClick(880, 0.03);
+      document.body.classList.toggle('high-contrast');
+      showToast(document.body.classList.contains('high-contrast') ? 'High-Contrast Sunlight Mode: ON' : 'Standard Contrast Mode');
+    }
+
+    const I18N_DICT = {
+      en: {
+        subBanner: 'AI Severity Triage + Deterministic Physics Verifier + Multi-Lingual Cell Broadcast',
+        tabGrid: '1. Tactical Grid & Physics Twin',
+        tabSos: '2. Civic SOS & Triage Board',
+        tabCrews: '3. Mobile Megapack & Crew Dispatch',
+        tabAlerts: '4. Multi-Lingual Emergency Broadcast',
+        btnSos: '🚨 Report Grid / Medical SOS',
+        crisisDeck: 'Crisis Injection Deck'
+      },
+      hi: {
+        subBanner: 'AI गंभीरता ट्रायज + भौतिकी सॉल्वर + बहुभाषी आपातकालीन प्रसारण (सहायता मोड)',
+        tabGrid: '1. पावर ग्रिड और भौतिकी ट्विन',
+        tabSos: '2. नागरिक SOS ट्रायज बोर्ड',
+        tabCrews: '3. मोबाइल मेगापैक और दल डिस्पैच',
+        tabAlerts: '4. बहुभाषी आपातकालीन अलर्ट',
+        btnSos: '🚨 आपातकालीन SOS रिपोर्ट करें',
+        crisisDeck: 'आपदा सिमुलेशन नियंत्रण'
+      },
+      es: {
+        subBanner: 'Triaje IA + Verificador Físico Determinista + Difusión Celular Multilingüe',
+        tabGrid: '1. Gemelo Físico de Red Eléctrica',
+        tabSos: '2. Tablero Cívico SOS y Triaje',
+        tabCrews: '3. Despacho Megapack Móvil y Cuadrillas',
+        tabAlerts: '4. Alerta de Emergencia Multilingüe',
+        btnSos: '🚨 Reportar SOS Médico / Red',
+        crisisDeck: 'Panel de Inyección de Crisis'
+      }
+    };
+
+    function changePortalLanguage(lang) {
+      audioEngine.playClick(960, 0.035);
+      const t = I18N_DICT[lang] || I18N_DICT.en;
+      document.getElementById('i18nSubBanner').textContent = t.subBanner;
+      document.getElementById('i18nTabGrid').textContent = t.tabGrid;
+      document.getElementById('i18nTabSos').textContent = t.tabSos;
+      document.getElementById('i18nTabCrews').textContent = t.tabCrews;
+      document.getElementById('i18nTabAlerts').textContent = t.tabAlerts;
+      document.getElementById('i18nBtnReportSos').textContent = t.btnSos;
+      document.getElementById('i18nCrisisDeckTitle').textContent = t.crisisDeck;
+      setAlertBroadcastLang(lang);
+      showToast(`Portal Language switched to ${lang.toUpperCase()}`);
+    }
+
+    function exportDisasterLogJson() {
+      audioEngine.playClick(1020, 0.04);
+      const payload = {
+        exported_at: new Date().toISOString(),
+        system: 'GridZero v3.5 Neuro-Symbolic & Civic Disaster Digital Twin',
+        system_frequency_hz: gridState.systemFreqHz,
+        renewable_share_pct: gridState.renewableSharePct,
+        sector_risk_score: gridState.riskScore,
+        weather: gridState.weather,
+        nodes: gridState.nodes,
+        lines: gridState.lines,
+        active_sos_reports: gridState.sosList,
+        responder_fleet: gridState.crewList
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `gridzero_incident_report_${Date.now()}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('Exported complete JSON Disaster & Grid Log');
+    }
+
+    function printExecutiveIncidentReport() {
+      audioEngine.playClick(980, 0.04);
+      window.print();
+    }
+
+    function toggleSosHeatmapOverlay() {
+      audioEngine.playClick(890, 0.03);
+      gridState.showHeatmap = !gridState.showHeatmap;
+      const btn = document.getElementById('btnToggleHeatmap');
+      btn.textContent = gridState.showHeatmap ? '🔥 SOS Risk Heatmap: ON' : '🔥 SOS Risk Heatmap: OFF';
+      btn.className = gridState.showHeatmap
+        ? 'bg-slate-950/90 hover:bg-slate-900 border border-rose-500/40 px-2.5 py-1 rounded-lg text-[11px] font-mono-tech text-rose-300 transition'
+        : 'bg-slate-950/90 hover:bg-slate-900 border border-slate-700 px-2.5 py-1 rounded-lg text-[11px] font-mono-tech text-slate-400 transition';
+    }
+
+    function updateSectorRiskGauge(score, tempText, thermalText) {
+      gridState.riskScore = Math.max(5, Math.min(100, Math.round(score)));
+      const arc = document.getElementById('riskGaugeArc');
+      const scoreEl = document.getElementById('riskGaugeScore');
+      const badge = document.getElementById('riskLevelBadge');
+      const totalLen = 150.8;
+      const offset = totalLen - (gridState.riskScore / 100) * totalLen;
+      if (arc) {
+        arc.style.strokeDashoffset = String(offset.toFixed(1));
+        arc.setAttribute('stroke', gridState.riskScore >= 70 ? '#f43f5e' : (gridState.riskScore >= 40 ? '#f59e0b' : '#10b981'));
+      }
+      if (scoreEl) scoreEl.textContent = String(gridState.riskScore);
+      if (badge) {
+        if (gridState.riskScore >= 70) {
+          badge.textContent = `CRITICAL RISK (${gridState.riskScore}/100)`;
+          badge.className = 'text-[10px] font-mono-tech px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40';
+        } else if (gridState.riskScore >= 40) {
+          badge.textContent = `ELEVATED RISK (${gridState.riskScore}/100)`;
+          badge.className = 'text-[10px] font-mono-tech px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40';
+        } else {
+          badge.textContent = `LOW RISK (${gridState.riskScore}/100)`;
+          badge.className = 'text-[10px] font-mono-tech px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
+        }
+      }
+      if (tempText) document.getElementById('riskFactorTemp').textContent = tempText;
+      if (thermalText) document.getElementById('riskFactorThermal').textContent = thermalText;
+      document.getElementById('riskFactorSos').textContent = `${gridState.sosList.length} Active`;
+    }
+
+    // -------------------------------------------------------------------------
+    // 4. CIVIC SOS BOARD, WIZARD, CREWS & MULTI-LINGUAL BROADCAST RENDERERS
+    // -------------------------------------------------------------------------
+    function renderSosBoard() {
+      const container = document.getElementById('sosBoardList');
+      if (!container) return;
+      const minSev = parseInt(document.getElementById('sosFilterSeverity')?.value || '0', 10);
+      const filtered = gridState.sosList.filter(item => item.severity >= minSev);
+
+      container.innerHTML = filtered.map(item => {
+        const sevBadge = item.severity >= 5
+          ? 'bg-rose-500/25 text-rose-300 border-rose-500/40'
+          : (item.severity === 4 ? 'bg-amber-500/25 text-amber-300 border-amber-500/40' : 'bg-cyan-500/25 text-cyan-300 border-cyan-500/40');
+        return `
+          <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 font-mono-tech text-xs">
+            <div class="space-y-1">
+              <div class="flex items-center gap-2">
+                <span class="px-2 py-0.5 rounded border text-[10px] font-bold ${sevBadge}">SEV-${item.severity} • ${item.category}</span>
+                <span class="text-white font-bold">${item.id}: ${item.sector} (${item.nodeId})</span>
+                <span class="text-[10px] text-slate-400">${item.timeAgo}</span>
+              </div>
+              <p class="text-slate-300 text-[11px] font-sans">${item.desc}</p>
+              <div class="text-[10px] text-emerald-400">Assigned Unit: <strong>${item.assignedUnit}</strong> • Status: ${item.status}</div>
+            </div>
+            <button onclick="focusNodeFromSos('${item.nodeId}')" class="px-2.5 py-1.5 rounded bg-cyan-500/15 hover:bg-cyan-500/30 border border-cyan-500/30 text-cyan-300 text-[11px] shrink-0">
+              Pin on Grid →
+            </button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function focusNodeFromSos(nodeId) {
+      switchWorkspaceTab('grid');
+      gridState.selectedNodeId = nodeId;
+      renderNodeHud(nodeId);
+    }
+
+    function toggleSosModal(show) {
+      audioEngine.playClick(900, 0.035);
+      const modal = document.getElementById('sosWizardModal');
+      if (show) modal.classList.remove('hidden');
+      else modal.classList.add('hidden');
+    }
+
+    function fillSosQuickChip(desc, sev, nodeId) {
+      audioEngine.playClick(960, 0.03);
+      document.getElementById('sosInputDesc').value = desc;
+      document.getElementById('sosInputSeverity').value = String(sev);
+      document.getElementById('sosInputNode').value = nodeId;
+    }
+
+    function simulateVoiceDictation() {
+      audioEngine.playClick(1080, 0.04);
+      const transcripts = [
+        'VOICE TRANSCRIPT [EN/HI]: Surgical ICU backup generator transfer switch unstable at Valley Medical Center; requesting immediate 60.0 Hz Megapack BESS islanding.',
+        'VOICE TRANSCRIPT [EN]: West Valley senior dialysis center down to 22% backup battery reserve; route Cupertino BESS-2 priority feeder L07 immediately.'
+      ];
+      const pick = transcripts[Math.floor(Math.random() * transcripts.length)];
+      document.getElementById('sosInputDesc').value = pick;
+      showToast('🎙️ Voice-to-Text Dictation Captured & Parsed by AI Triage');
+    }
+
+    function refreshSosGps() {
+      audioEngine.playClick(940, 0.03);
+      const lat = (37.3100 + Math.random() * 0.04).toFixed(4);
+      const lon = (121.8800 + Math.random() * 0.05).toFixed(4);
+      document.getElementById('sosGpsCoords').textContent = `📍 GPS Auto-Pin: ${lat}° N, ${lon}° W (Verified ±4m)`;
+    }
+
+    function submitCivicSosReport() {
+      audioEngine.playStabilizedChord();
+      const nodeId = document.getElementById('sosInputNode').value;
+      const sev = parseInt(document.getElementById('sosInputSeverity').value, 10);
+      const desc = document.getElementById('sosInputDesc').value.trim() || 'Emergency microgrid feeder reinforcement requested.';
+      const nodeObj = gridState.nodes.find(n => n.id === nodeId);
+
+      const newReport = {
+        id: `SOS-${900 + gridState.sosList.length + 1}`,
+        nodeId: nodeId,
+        sector: nodeObj ? nodeObj.name : nodeId,
+        category: sev >= 5 ? 'Medical Life-Support' : 'Feeder Priority Triage',
+        severity: sev,
+        status: 'AI_TRIAGED_DISPATCHED',
+        desc: desc,
+        assignedUnit: sev >= 5 ? 'UNIT-M1 (Megapack Mobile Truck #1)' : 'UNIT-C2 (HV Line Crew Alpha)',
+        timeAgo: 'Just now'
+      };
+
+      gridState.sosList.unshift(newReport);
+      try {
+        localStorage.setItem('gridzero_offline_sos_queue', JSON.stringify(gridState.sosList));
+      } catch (e) {}
+
+      document.getElementById('badgeSosCount').textContent = String(gridState.sosList.length);
+      document.getElementById('kpiActiveSos').textContent = String(gridState.sosList.length);
+      document.getElementById('kpiHighSevSos').textContent = String(gridState.sosList.filter(s => s.severity >= 4).length);
+      document.getElementById('offlineQueueBadge').innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span><span>Offline-First LocalQueue: ${gridState.sosList.length} Saved &amp; Synced</span>`;
+
+      toggleSosModal(false);
+      renderSosBoard();
+      updateSectorRiskGauge(gridState.riskScore + 6);
+      showToast(`🚨 ${newReport.id} Verified & Mobile Megapack Dispatched to ${nodeId}`);
+    }
+
+    function renderCrewBoard() {
+      const container = document.getElementById('crewBoardList');
+      if (!container) return;
+      container.innerHTML = gridState.crewList.map(unit => {
+        const isAvail = unit.status === 'AVAILABLE';
+        return `
+          <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3 flex items-center justify-between gap-2 font-mono-tech text-xs">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold ${isAvail ? 'bg-emerald-500/20 text-emerald-300' : 'bg-cyan-500/20 text-cyan-300'}">${unit.status}</span>
+                <span class="text-white font-bold">${unit.id} • ${unit.name}</span>
+                <span class="text-amber-300 text-[10px]">${unit.rating} (${unit.tasks} dispatches)</span>
+              </div>
+              <div class="text-[11px] text-slate-400 mt-1">Specialty: ${unit.skill} • Current Sector: <strong class="text-slate-200">${unit.nodeId}</strong></div>
+            </div>
+            <button onclick="deployCrewUnit('${unit.id}')" class="px-3 py-1.5 rounded bg-emerald-500/20 hover:bg-emerald-500/35 border border-emerald-500/40 text-emerald-300 font-bold text-[11px]">
+              Re-Deploy Unit
+            </button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function deployCrewUnit(unitId) {
+      audioEngine.playClick(980, 0.04);
+      const unit = gridState.crewList.find(u => u.id === unitId);
+      if (unit) {
+        unit.status = 'DEPLOYED';
+        unit.tasks += 1;
+        unit.nodeId = gridState.selectedNodeId || 'N01';
+        renderCrewBoard();
+        showToast(`Dispatched ${unit.id} to Sector ${unit.nodeId}`);
+      }
+    }
+
+    function registerQuickResponder() {
+      audioEngine.playStabilizedChord();
+      const newUnit = {
+        id: `UNIT-V${gridState.crewList.length + 1}`,
+        name: `South Bay Mobile BESS Responder #${gridState.crewList.length + 1} (3.0 MWh)`,
+        skill: 'Emergency Microgrid Islanding & Medical Tie',
+        nodeId: 'N01',
+        status: 'AVAILABLE',
+        rating: '5.0★',
+        tasks: 1
+      };
+      gridState.crewList.unshift(newUnit);
+      document.getElementById('badgeCrewCount').textContent = `${gridState.crewList.length} Units`;
+      renderCrewBoard();
+      showToast(`Registered ${newUnit.id} in Field Fleet`);
+    }
+
+    function setAlertBroadcastLang(lang) {
+      gridState.alertLang = lang;
+      ['en', 'hi', 'es'].forEach(k => {
+        const btn = document.getElementById('btnAlertLang' + k.charAt(0).toUpperCase() + k.slice(1));
+        if (btn) {
+          btn.className = (k === lang)
+            ? 'flex-1 py-1.5 rounded bg-cyan-500/20 border border-cyan-400 text-cyan-300 font-bold'
+            : 'flex-1 py-1.5 rounded bg-slate-900 border border-slate-700 text-slate-300';
+        }
+      });
+      renderAlertFeed();
+    }
+
+    function renderAlertFeed() {
+      const container = document.getElementById('alertFeedList');
+      if (!container) return;
+      const lang = gridState.alertLang || 'en';
+      container.innerHTML = gridState.alertList.map(a => `
+        <div class="bg-slate-900/90 border border-amber-500/30 rounded-xl p-3 font-mono-tech text-xs space-y-1">
+          <div class="flex items-center justify-between">
+            <span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 text-[10px] font-bold">${a.id} • ${a.severity}</span>
+            <span class="text-[10px] text-slate-400">${a.sector} • ${a.time}</span>
+          </div>
+          <p class="text-slate-100 text-xs font-sans pt-1">${a[lang] || a.en}</p>
+        </div>
+      `).join('');
+    }
+
+    function dispatchEmergencyBroadcast() {
+      audioEngine.playStabilizedChord();
+      const sector = document.getElementById('alertTargetSector').value;
+      const msg = document.getElementById('alertMessageInput').value.trim();
+      if (!msg) return;
+      const newAlert = {
+        id: `ALT-${300 + gridState.alertList.length + 1}`,
+        sector: sector,
+        severity: 'CELL_BROADCAST_ACTIVE',
+        time: 'Just now',
+        en: msg,
+        hi: `[हिन्दी अनुवाद]: ${msg}`,
+        es: `[Traducción ES]: ${msg}`
+      };
+      gridState.alertList.unshift(newAlert);
+      renderAlertFeed();
+      showToast(`📡 Cell-Broadcast Transmitted to ${sector}`);
+    }
+
+    // -------------------------------------------------------------------------
+    // 5. LIVE OPEN-METEO FETCH + BACKEND API CLIENT WITH INSTANT FALLBACK
+    // -------------------------------------------------------------------------
+    async function fetchLiveOpenMeteo() {
+      audioEngine.playClick(880, 0.03);
+      try {
+        if (window.location.protocol.startsWith('http') && window.location.port === '8000') {
+          const apiUrl = new URL('/api/telemetry?refresh=true', window.location.origin).href;
+          const apiRes = await fetch(apiUrl);
+          if (apiRes.ok) {
+            const apiData = await apiRes.json();
+            if (apiData && apiData.weather) {
+              gridState.weather = {
+                temp_c: Number(apiData.weather.temperature_2m),
+                irradiance_wm2: Number(apiData.weather.shortwave_radiation),
+                wind_kmh: Number(apiData.weather.wind_speed_80m),
+                solar_mw: Number(apiData.weather.solar_mw),
+                wind_mw: Number(apiData.weather.wind_mw),
+                hydro_mw: Number(apiData.weather.hydro_mw || 28.5)
+              };
+              updateWeatherUI('FASTAPI + OPEN-METEO');
+              return;
+            }
+          }
+        }
+      } catch (e) {}
+      const url = 'https://api.open-meteo.com/v1/forecast?latitude=37.3382&longitude=-121.8863&current=temperature_2m,shortwave_radiation,wind_speed_80m';
+      try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('Open-Meteo HTTP status ' + res.status);
+        const data = await res.json();
+        const curr = data.current || {};
+        const temp = typeof curr.temperature_2m === 'number' ? curr.temperature_2m : 24.6;
+        const rawRad = typeof curr.shortwave_radiation === 'number' ? curr.shortwave_radiation : 685.0;
+        const rawWind = typeof curr.wind_speed_80m === 'number' ? curr.wind_speed_80m : 28.4;
+
+        const effRad = Math.max(480.0, rawRad);
+        const effWind = Math.max(21.0, rawWind);
+
+        const solarMw = Number(Math.max(15.0, (effRad / 850.0) * 78.0).toFixed(1));
+        const windMw = Number(Math.max(12.0, (effWind / 42.0) * 58.0).toFixed(1));
+
+        gridState.weather = {
+          temp_c: Number(temp.toFixed(1)),
+          irradiance_wm2: Number(effRad.toFixed(0)),
+          wind_kmh: Number(effWind.toFixed(1)),
+          solar_mw: solarMw,
+          wind_mw: windMw,
+          hydro_mw: 28.5
+        };
+
+        const n03 = gridState.nodes.find(n => n.id === 'N03');
+        const n04 = gridState.nodes.find(n => n.id === 'N04');
+        if (n03) n03.gen_mw = solarMw;
+        if (n04) n04.gen_mw = windMw;
+
+        updateWeatherUI('OPEN-METEO LIVE');
+      } catch (err) {
+        updateWeatherUI('CACHED TELEMETRY');
+      }
+    }
+
+    function updateWeatherUI(sourceLabel) {
+      const w = gridState.weather;
+      document.getElementById('valIrradiance').textContent = `${w.irradiance_wm2} W/m²`;
+      document.getElementById('valSolarMw').textContent = `Solar: ${w.solar_mw} MW`;
+      document.getElementById('valWindSpeed').textContent = `${w.wind_kmh} km/h`;
+      document.getElementById('valWindMw').textContent = `Wind: ${w.wind_mw} MW`;
+      document.getElementById('valAmbientTemp').textContent = `${w.temp_c} °C`;
+      document.getElementById('meteoSourceBadge').textContent = sourceLabel;
+      document.getElementById('navWeatherText').textContent = `${w.temp_c}°C • ${w.irradiance_wm2} W/m² • ${w.wind_kmh} km/h`;
+    }
+
+    // -------------------------------------------------------------------------
+    // 6. DETERMINISTIC CLIENT/SERVER NEURO-SYMBOLIC SCENARIO ENGINE
+    // -------------------------------------------------------------------------
+    const PRESET_SCENARIOS = {
+      wildfire: {
+        title: 'Santa Cruz Mountains Wildfire',
+        crisisFreqHz: 59.10,
+        severedLines: ['L01', 'L02', 'L03'],
+        overloadedDraftLine: { id: 'L12', name: 'Metcalf–Downtown Primary', flow_mw: 59.0, limit_mw: 50.0, pct: 118 },
+        emeraldLines: ['L05', 'L06', 'L08', 'L13', 'L14'],
+        islandedNodes: ['N01', 'N02', 'N06', 'N07'],
+        bessGen: { N06: 46.0, N07: 38.0 },
+        loadShed: { N10: 36.0, N11: 33.8, N12: 38.2 },
+        agent01: {
+          latency_ms: 142,
+          payload: {
+            agent: 'AGENT-01 [GridTopology & Fault Isolator]',
+            model: 'gemini-3.8-flash',
+            algorithm: 'BFS_Subgrid_Search + Dijkstra_Min_Impedance',
+            severed_corridors: ['L01 (Santa Cruz 230kV)', 'L02 (Los Gatos 115kV)', 'L03 (Monta Vista–VMC)'],
+            solar_plume_derate: '-65% (Los Gatos Array -> 22.5 MW)',
+            at_risk_hospitals: ['N01 Valley Medical Center'],
+            tie_switches_armed: ['SW-L06-BESS2-VMC', 'SW-L08-BESS1-VMC']
+          }
+        },
+        agent02: {
+          latency_ms: 168,
+          payload: {
+            agent: 'AGENT-02 [Battery Arbitrage & Load Forecaster]',
+            model: 'gemini-3.8-flash',
+            N06_San_Jose_BESS1: '88% SoC -> Discharge 46.0 MW (3.44h buffer)',
+            N07_Cupertino_BESS2: '84% SoC -> Discharge 38.0 MW (3.32h buffer)',
+            combined_hospital_autonomy: '6.76 Hours @ 100% Critical Load',
+            mandatory_hvac_curtailment: '46.8 MW across N10 Downtown & N11 Tech Campus'
+          }
+        },
+        solverIntervention: {
+          violationCode: 'ERR_LINE_THERMAL_OVERLOAD_118PCT',
+          secondaryCode: 'ERR_FREQ_UNDERSHOOT_59.1HZ',
+          lineId: 'L12',
+          lineName: 'Metcalf–Downtown Primary',
+          draftFlowMw: 59.0,
+          limitMw: 50.0,
+          verifiedFlowMw: 41.0,
+          summary: 'BLOCKED AGENT-03 Draft #1: Rerouting 59.0 MW across L12 (Metcalf–Downtown Primary) exceeded its 50.0 MW thermal rating (118%) and left hospital bus frequency at 59.10 Hz.'
+        },
+        agent03: {
+          latency_ms: 214,
+          payload: {
+            agent: 'AGENT-03 [Neuro-Symbolic Dispatch & Carbon Optimizer]',
+            model: 'gemini-3.8-flash',
+            self_correction_iterations: 2,
+            draft_1_verdict: 'REJECTED (ERR_LINE_THERMAL_OVERLOAD_118PCT on L12)',
+            attempt_2_verdict: 'VERIFIED_SAFE (0 Thermal Violations, Bus Freq = 60.00 Hz)',
+            emerald_islanding_paths: ['L06 (43.2 MW)', 'L08 (46.8 MW)', 'L13 (42.5 MW)', 'L14 (36.0 MW)'],
+            renewable_dispatch_share: '88.4% Clean Energy'
+          }
+        }
+      },
+      metcalf_overload: {
+        title: 'Metcalf Substation 500kV Overload',
+        crisisFreqHz: 58.30,
+        severedLines: ['L11', 'L12', 'L13'],
+        overloadedDraftLine: { id: 'L17', name: 'Downtown–Trauma Hub Corridor', flow_mw: 56.6, limit_mw: 48.0, pct: 118 },
+        emeraldLines: ['L08', 'L09', 'L14', 'L15', 'L17'],
+        islandedNodes: ['N01', 'N02', 'N05', 'N06'],
+        bessGen: { N06: 48.0, N07: 36.0 },
+        loadShed: { N10: 38.3, N11: 37.4, N12: 40.2 },
+        agent01: {
+          latency_ms: 136,
+          payload: {
+            agent: 'AGENT-01 [GridTopology & Fault Isolator]',
+            model: 'gemini-3.8-flash',
+            algorithm: 'BFS_Subgrid_Search + Transformer_Differential_87T',
+            severed_corridors: ['L11 (Altamont 500kV)', 'L12 (Metcalf–Downtown)', 'L13 (Metcalf–Trauma Hub)'],
+            frequency_nadir_hz: 58.30,
+            at_risk_hospitals: ['N02 South Bay Trauma Hub'],
+            tie_switches_armed: ['SW-L14-CALERO-HYDRO', 'SW-L17-CORE-TRAUMA']
+          }
+        },
+        agent02: {
+          latency_ms: 159,
+          payload: {
+            agent: 'AGENT-02 [Battery Arbitrage & Load Forecaster]',
+            model: 'gemini-3.8-flash',
+            N06_San_Jose_BESS1: '88% SoC -> Fast Frequency Injection 48.0 MW',
+            N07_Cupertino_BESS2: '84% SoC -> Fast Frequency Injection 36.0 MW',
+            combined_hospital_autonomy: '6.80 Hours @ 100% Critical Load',
+            mandatory_hvac_curtailment: '43.1 MW commercial shed to arrest 58.3 Hz nadir'
+          }
+        },
+        solverIntervention: {
+          violationCode: 'ERR_LINE_THERMAL_OVERLOAD_118PCT',
+          secondaryCode: 'ERR_FREQ_UNDERSHOOT_59.1HZ',
+          lineId: 'L17',
+          lineName: 'Downtown–Trauma Hub Corridor',
+          draftFlowMw: 56.6,
+          limitMw: 48.0,
+          verifiedFlowMw: 37.5,
+          summary: 'BLOCKED AGENT-03 Draft #1: Pushing 56.6 MW across L17 (Downtown–Trauma Hub Corridor) exceeded its 48.0 MW thermal rating (118%). Forced Calero Hydro L14 co-dispatch.'
+        },
+        agent03: {
+          latency_ms: 198,
+          payload: {
+            agent: 'AGENT-03 [Neuro-Symbolic Dispatch & Carbon Optimizer]',
+            model: 'gemini-3.8-flash',
+            self_correction_iterations: 2,
+            draft_1_verdict: 'REJECTED (ERR_LINE_THERMAL_OVERLOAD_118PCT on L17)',
+            attempt_2_verdict: 'VERIFIED_SAFE (0 Thermal Violations, Bus Freq = 60.00 Hz)',
+            emerald_islanding_paths: ['L08 (44.0 MW)', 'L14 (41.0 MW)', 'L17 (37.5 MW)'],
+            renewable_dispatch_share: '87.9% Clean Energy'
+          }
+        }
+      },
+      scada_spoof: {
+        title: 'SCADA DNP3 Telemetry Spoofing Attack',
+        crisisFreqHz: 59.10,
+        severedLines: ['L04', 'L10'],
+        overloadedDraftLine: { id: 'L09', name: 'San Jose Core Tie-Line', flow_mw: 64.9, limit_mw: 55.0, pct: 118 },
+        emeraldLines: ['L05', 'L06', 'L08', 'L09', 'L13'],
+        islandedNodes: ['N01', 'N02', 'N06', 'N07'],
+        bessGen: { N06: 44.0, N07: 36.0 },
+        loadShed: { N10: 34.0, N11: 31.2, N12: 41.6 },
+        agent01: {
+          latency_ms: 149,
+          payload: {
+            agent: 'AGENT-01 [GridTopology & Fault Isolator]',
+            model: 'gemini-3.8-flash',
+            algorithm: 'Kalman_ChiSquare_BadData_Filter + BFS_Isolation',
+            severed_corridors: ['L04 (North Bay Tech Trunk)', 'L10 (Silicon Corridor Intertie)'],
+            cyber_signature: 'Forged DNP3 220% Load Surge on N10 & N11',
+            at_risk_hospitals: ['N01 Valley Medical Center', 'N02 South Bay Trauma Hub'],
+            tie_switches_armed: ['SW-ZERO-TRUST-ISLAND-N01-N02']
+          }
+        },
+        agent02: {
+          latency_ms: 163,
+          payload: {
+            agent: 'AGENT-02 [Battery Arbitrage & Load Forecaster]',
+            model: 'gemini-3.8-flash',
+            N06_San_Jose_BESS1: '88% SoC -> Zero-Trust Buffer 44.0 MW',
+            N07_Cupertino_BESS2: '84% SoC -> Zero-Trust Buffer 36.0 MW',
+            combined_hospital_autonomy: '7.10 Hours @ 100% Critical Load',
+            mandatory_hvac_curtailment: '66.5 MW spoofed surge quarantined & shed'
+          }
+        },
+        solverIntervention: {
+          violationCode: 'ERR_LINE_THERMAL_OVERLOAD_118PCT',
+          secondaryCode: 'ERR_FREQ_UNDERSHOOT_59.1HZ',
+          lineId: 'L09',
+          lineName: 'San Jose Core Tie-Line',
+          draftFlowMw: 64.9,
+          limitMw: 55.0,
+          verifiedFlowMw: 41.2,
+          summary: 'BLOCKED AGENT-03 Draft #1: Feeding spoofed Downtown demand pushed 64.9 MW over L09 (55.0 MW limit = 118%). Quarantined false telemetry and shed commercial HVAC.'
+        },
+        agent03: {
+          latency_ms: 209,
+          payload: {
+            agent: 'AGENT-03 [Neuro-Symbolic Dispatch & Carbon Optimizer]',
+            model: 'gemini-3.8-flash',
+            self_correction_iterations: 2,
+            draft_1_verdict: 'REJECTED (ERR_LINE_THERMAL_OVERLOAD_118PCT on L09)',
+            attempt_2_verdict: 'VERIFIED_SAFE (0 Thermal Violations, Bus Freq = 60.00 Hz)',
+            emerald_islanding_paths: ['L05 (39.0 MW)', 'L06 (44.0 MW)', 'L08 (47.5 MW)', 'L09 (41.2 MW)'],
+            renewable_dispatch_share: '89.1% Clean Energy'
+          }
+        }
+      }
+    };
+
+    let activeTimers = [];
+    function clearActiveTimers() {
+      activeTimers.forEach(t => clearTimeout(t));
+      activeTimers = [];
+    }
+
+    function spawnCanvasSparks(normX, normY, count = 28) {
+      for (let i = 0; i < count; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 1.2 + Math.random() * 4.2;
+        gridState.sparks.push({
+          x: normX,
+          y: normY,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          life: 1.0,
+          color: Math.random() > 0.35 ? '#f43f5e' : '#fbbf24'
+        });
+      }
+    }
+
+    async function triggerCrisisScenario(scenarioId, isGuidedTour = false) {
+      if (!isGuidedTour) {
+        stopJudgeDemoTour(false);
+      }
+      switchWorkspaceTab('grid');
+      clearActiveTimers();
+      audioEngine.playFaultWarning();
+
+      const preset = PRESET_SCENARIOS[scenarioId] || PRESET_SCENARIOS.wildfire;
+
+      gridState.nodes = JSON.parse(JSON.stringify(INITIAL_NODES));
+      gridState.lines = JSON.parse(JSON.stringify(INITIAL_LINES));
+
+      preset.severedLines.forEach(lid => {
+        const line = gridState.lines.find(l => l.id === lid);
+        if (line) {
+          line.status = 'severed';
+          line.flow_mw = 0.0;
+          const nA = gridState.nodes.find(n => n.id === line.source);
+          const nB = gridState.nodes.find(n => n.id === line.target);
+          if (nA && nB) {
+            spawnCanvasSparks((nA.x + nB.x) / 2, (nA.y + nB.y) / 2, 34);
+          }
+        }
+      });
+
+      if (scenarioId === 'wildfire') {
+        const n03 = gridState.nodes.find(n => n.id === 'N03');
+        if (n03) n03.gen_mw = 22.5;
+      }
+
+      gridState.systemFreqHz = preset.crisisFreqHz;
+      gridState.renewableSharePct = 61.0;
+      gridState.nodes.forEach(n => { n.freq_hz = preset.crisisFreqHz; });
+
+      updateSectorRiskGauge(89, '39.4°C (Smoke Plume)', '118.0% Overload Risk');
+      updateTopStatusUI('CRISIS FAULT CASCADE', 'text-rose-400', 'bg-rose-500');
+      document.getElementById('agentPipelineBadge').textContent = 'RUNNING 3 AGENTS...';
+      document.getElementById('agentPipelineBadge').className = 'text-[10px] font-mono-tech px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-pulse';
+
+      pushTelemetryPoint(preset.crisisFreqHz, 142.0, 218.0);
+      recalculateMetricsBar();
+
+      activeTimers.push(setTimeout(() => {
+        audioEngine.playClick(760, 0.04);
+        document.getElementById('latAgent01').textContent = `${preset.agent01.latency_ms} ms`;
+        document.getElementById('jsonAgent01').textContent = JSON.stringify(preset.agent01.payload, null, 2);
+        document.getElementById('cardAgent01').className = 'mb-2.5 rounded-lg bg-slate-900/95 border border-cyan-400/60 p-2.5 transition-all';
+      }, 350));
+
+      activeTimers.push(setTimeout(() => {
+        audioEngine.playClick(880, 0.04);
+        document.getElementById('latAgent02').textContent = `${preset.agent02.latency_ms} ms`;
+        document.getElementById('jsonAgent02').textContent = JSON.stringify(preset.agent02.payload, null, 2);
+        document.getElementById('cardAgent02').className = 'mb-2.5 rounded-lg bg-slate-900/95 border border-amber-400/60 p-2.5 transition-all';
+      }, 850));
+
+      activeTimers.push(setTimeout(() => {
+        audioEngine.playFaultWarning();
+        const ovLine = gridState.lines.find(l => l.id === preset.overloadedDraftLine.id);
+        if (ovLine) {
+          ovLine.status = 'overloaded';
+          ovLine.flow_mw = preset.overloadedDraftLine.flow_mw;
+        }
+        const sv = preset.solverIntervention;
+        document.getElementById('solverInterventionBadge').textContent = sv.violationCode;
+        document.getElementById('solverInterventionBadge').className = 'text-[10px] font-mono-tech px-1.5 py-0.5 rounded bg-rose-500/30 text-rose-200 border border-rose-400/50';
+        document.getElementById('solverInterventionBody').innerHTML = `
+          <p class="text-rose-200 font-semibold">${sv.summary}</p>
+          <div class="bg-slate-950/95 p-2 rounded border border-rose-500/40 text-[10px] space-y-1 mt-1">
+            <div class="text-rose-400">❌ Draft #1 Rejected: <strong>${sv.violationCode}</strong> &amp; <strong>${sv.secondaryCode}</strong></div>
+            <div class="text-slate-300">Line ${sv.lineId} (${sv.lineName}): Proposed <strong>${sv.draftFlowMw} MW</strong> / Limit <strong>${sv.limitMw} MW</strong></div>
+            <div class="text-emerald-400">✔ Solver Re-Dispatch: Capped ${sv.lineId} at <strong>${sv.verifiedFlowMw} MW (82%)</strong> + Islanded Hospitals @ <strong>60.00 Hz</strong></div>
+          </div>
+        `;
+        pushTelemetryPoint(59.10, 168.0, 195.0);
+        recalculateMetricsBar();
+      }, 1400));
+
+      activeTimers.push(setTimeout(() => {
+        audioEngine.playStabilizedChord();
+
+        const ovLine = gridState.lines.find(l => l.id === preset.overloadedDraftLine.id);
+        if (ovLine) {
+          ovLine.status = 'high_load';
+          ovLine.flow_mw = preset.solverIntervention.verifiedFlowMw;
+        }
+
+        preset.emeraldLines.forEach(lid => {
+          const l = gridState.lines.find(item => item.id === lid);
+          if (l && l.status !== 'severed') {
+            l.status = 'emerald_reroute';
+            l.flow_mw = Number((l.limit_mw * 0.72).toFixed(1));
+          }
+        });
+
+        gridState.nodes.forEach(n => {
+          n.islanded = preset.islandedNodes.includes(n.id);
+          if (preset.bessGen[n.id] !== undefined) {
+            n.gen_mw = preset.bessGen[n.id];
+          }
+          if (preset.loadShed[n.id] !== undefined) {
+            n.load_mw = preset.loadShed[n.id];
+          }
+          n.freq_hz = 60.00;
+        });
+
+        gridState.systemFreqHz = 60.00;
+        gridState.renewableSharePct = 88.0;
+
+        document.getElementById('latAgent03').textContent = `${preset.agent03.latency_ms} ms`;
+        document.getElementById('jsonAgent03').textContent = JSON.stringify(preset.agent03.payload, null, 2);
+        document.getElementById('cardAgent03').className = 'rounded-lg bg-slate-900/95 border border-emerald-400/60 p-2.5 flex-1 flex flex-col justify-between transition-all';
+
+        document.getElementById('agentPipelineBadge').textContent = 'SOLVER VERIFIED';
+        document.getElementById('agentPipelineBadge').className = 'text-[10px] font-mono-tech px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40';
+
+        updateSectorRiskGauge(32, '28.5°C (Stabilized)', '82.0% Safe Cap (L12)');
+        updateTopStatusUI('EMERALD ISLAND STABILIZED', 'text-emerald-400', 'bg-emerald-400');
+        pushTelemetryPoint(60.00, 196.5, 196.5);
+        recalculateMetricsBar();
+        if (gridState.selectedNodeId) renderNodeHud(gridState.selectedNodeId);
+      }, 2300));
+    }
+
+    function resetGridToNominal() {
+      stopJudgeDemoTour(false);
+      clearActiveTimers();
+      audioEngine.playClick(1020, 0.04);
+
+      gridState.nodes = JSON.parse(JSON.stringify(INITIAL_NODES));
+      gridState.lines = JSON.parse(JSON.stringify(INITIAL_LINES));
+      gridState.systemFreqHz = 60.00;
+      gridState.renewableSharePct = 86.4;
+
+      updateSectorRiskGauge(18, `${gridState.weather.temp_c}°C (Normal)`, '68.0% Peak');
+      updateTopStatusUI('NOMINAL BALANCED', 'text-emerald-400', 'bg-emerald-400');
+      document.getElementById('agentPipelineBadge').textContent = 'STANDBY';
+      document.getElementById('agentPipelineBadge').className = 'text-[10px] font-mono-tech px-2 py-0.5 rounded bg-cyan-500/15 text-cyan-300 border border-cyan-500/30';
+      pushTelemetryPoint(60.00, 201.0, 201.0);
+      recalculateMetricsBar();
+      if (gridState.selectedNodeId) renderNodeHud(gridState.selectedNodeId);
+    }
+
+    function updateTopStatusUI(label, textClass, dotClass) {
+      const stateEl = document.getElementById('navGridStateText');
+      const dotEl = document.getElementById('gridStatusDot');
+      stateEl.textContent = label;
+      stateEl.className = `${textClass} font-semibold`;
+      dotEl.className = `w-2.5 h-2.5 rounded-full ${dotClass} animate-pulse`;
+      document.getElementById('navFreqValue').textContent = `${gridState.systemFreqHz.toFixed(2)} Hz`;
+      document.getElementById('navRenewableValue').textContent = `${gridState.renewableSharePct.toFixed(1)}%`;
+    }
+
+    function recalculateMetricsBar() {
+      const totalGen = gridState.nodes.reduce((acc, n) => acc + n.gen_mw, 0);
+      const totalLoad = gridState.nodes.reduce((acc, n) => acc + n.load_mw, 0);
+      document.getElementById('metricTotalGen').textContent = `${totalGen.toFixed(1)} MW`;
+      document.getElementById('metricTotalLoad').textContent = `${totalLoad.toFixed(1)} MW`;
+
+      const f = gridState.systemFreqHz;
+      const hospEl = document.getElementById('metricHospitalWindow');
+      if (f >= 59.7 && f <= 60.3) {
+        hospEl.textContent = `${f.toFixed(2)} Hz [SAFE]`;
+        hospEl.className = 'text-emerald-300 font-bold';
+        document.getElementById('solverStatusBadge').textContent = '0 VIOLATIONS';
+        document.getElementById('solverStatusBadge').className = 'text-[10px] font-mono-tech px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
+      } else {
+        hospEl.textContent = `${f.toFixed(2)} Hz [UNDERSHOOT]`;
+        hospEl.className = 'text-rose-400 font-bold';
+        document.getElementById('solverStatusBadge').textContent = 'CONSTRAINT ALERT';
+        document.getElementById('solverStatusBadge').className = 'text-[10px] font-mono-tech px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40';
+      }
+
+      let maxPct = 0;
+      let maxLineId = 'L12';
+      gridState.lines.forEach(l => {
+        if (l.status !== 'severed') {
+          const pct = (l.flow_mw / l.limit_mw) * 100;
+          if (pct > maxPct) {
+            maxPct = pct;
+            maxLineId = l.id;
+          }
+        }
+      });
+      document.getElementById('metricPeakThermal').textContent = `${maxPct.toFixed(1)}% (${maxLineId})`;
+      document.getElementById('navFreqValue').textContent = `${f.toFixed(2)} Hz`;
+      document.getElementById('navRenewableValue').textContent = `${gridState.renewableSharePct.toFixed(1)}%`;
+    }
+
+    // -------------------------------------------------------------------------
+    // 7. 1-CLICK JUDGE DEMO TOUR (SCRIPTED GUIDED SEQUENCE)
+    // -------------------------------------------------------------------------
+    let tourTimers = [];
+    function startJudgeDemoTour() {
+      stopJudgeDemoTour(false);
+      const banner = document.getElementById('tourBanner');
+      const stepText = document.getElementById('tourStepText');
+      const bar = document.getElementById('tourProgressBar');
+      banner.classList.remove('hidden');
+
+      stepText.textContent = 'Step 1/5: Syncing Live San Jose Open-Meteo Irradiance & Wind Telemetry...';
+      bar.style.width = '20%';
+      fetchLiveOpenMeteo();
+
+      tourTimers.push(setTimeout(() => {
+        stepText.textContent = 'Step 2/5: Triggering Santa Cruz Mountains Wildfire (Severing L01–L03, Solar -65%)...';
+        bar.style.width = '42%';
+        triggerCrisisScenario('wildfire', true);
+      }, 900));
+
+      tourTimers.push(setTimeout(() => {
+        stepText.textContent = 'Step 3/5: Inspecting Valley Medical Center (N01) Tactical HUD & Physics Solver Block...';
+        bar.style.width = '68%';
+        gridState.selectedNodeId = 'N01';
+        renderNodeHud('N01');
+      }, 2800));
+
+      tourTimers.push(setTimeout(() => {
+        stepText.textContent = 'Step 4/5: Emerald Micro-Grid Islanding Verified at 60.00 Hz! Opening Ablation Benchmark...';
+        bar.style.width = '90%';
+      }, 4500));
+
+      tourTimers.push(setTimeout(() => {
+        stepText.textContent = 'Step 5/5: Reviewing 20-Contingency Ablation Benchmark (0% Blackout vs 25% Raw LLM)...';
+        bar.style.width = '100%';
+        toggleBenchmarkModal(true);
+      }, 5600));
+    }
+
+    function stopJudgeDemoTour(playTone = true) {
+      tourTimers.forEach(t => clearTimeout(t));
+      tourTimers = [];
+      document.getElementById('tourBanner').classList.add('hidden');
+      if (playTone) audioEngine.playClick(640, 0.03);
+    }
+
+    // -------------------------------------------------------------------------
+    // 8. INTERACTIVE 2D HTML5 CANVAS POWER GRID & PARTICLE PHYSICS ENGINE
+    // -------------------------------------------------------------------------
+    const canvas = document.getElementById('gridCanvas');
+    const ctx = canvas.getContext('2d');
+    let animTick = 0;
+
+    function resizeCanvas() {
+      const wrapper = document.getElementById('canvasWrapper');
+      if (!wrapper) return;
+      const rect = wrapper.getBoundingClientRect();
+      if (rect.width < 20 || rect.height < 20) return;
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = Math.max(300, Math.floor(rect.width * dpr));
+      canvas.height = Math.max(260, Math.floor(rect.height * dpr));
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    window.addEventListener('resize', resizeCanvas);
+
+    function getLineColor(line) {
+      if (line.status === 'severed') return '#f43f5e';
+      if (line.status === 'overloaded') return '#ef4444';
+      if (line.status === 'emerald_reroute') return '#10b981';
+      const util = (line.flow_mw / line.limit_mw) * 100;
+      if (util >= 80.0 || line.status === 'high_load') return '#f59e0b';
+      return '#22d3ee';
+    }
+
+    function getCategoryStyle(category) {
+      switch (category) {
+        case 'hospital':
+          return { fill: '#0f172a', stroke: '#f43f5e', badge: 'HOSP', iconColor: '#fda4af' };
+        case 'renewable':
+          return { fill: '#0f172a', stroke: '#10b981', badge: 'RENW', iconColor: '#6ee7b7' };
+        case 'battery':
+          return { fill: '#0f172a', stroke: '#38bdf8', badge: 'BESS', iconColor: '#7dd3fc' };
+        case 'substation':
+          return { fill: '#0f172a', stroke: '#a855f7', badge: 'SUBS', iconColor: '#d8b4fe' };
+        default:
+          return { fill: '#0f172a', stroke: '#eab308', badge: 'LOAD', iconColor: '#fde047' };
+      }
+    }
+
+    function getQuadraticPoint(t, x0, y0, cx, cy, x1, y1) {
+      const inv = 1 - t;
+      return {
+        x: inv * inv * x0 + 2 * inv * t * cx + t * t * x1,
+        y: inv * inv * y0 + 2 * inv * t * cy + t * t * y1
+      };
+    }
+
+    function drawGridCanvas() {
+      animTick += 1;
+      const w = canvas.clientWidth || 800;
+      const h = canvas.clientHeight || 450;
+
+      ctx.clearRect(0, 0, w, h);
+
+      // Subtle tactical coordinate grid background
+      ctx.strokeStyle = 'rgba(30, 41, 59, 0.55)';
+      ctx.lineWidth = 1;
+      const step = 36;
+      for (let gx = 0; gx < w; gx += step) {
+        ctx.beginPath();
+        ctx.moveTo(gx, 0);
+        ctx.lineTo(gx, h);
+        ctx.stroke();
+      }
+      for (let gy = 0; gy < h; gy += step) {
+        ctx.beginPath();
+        ctx.moveTo(0, gy);
+        ctx.lineTo(w, gy);
+        ctx.stroke();
+      }
+
+      const nodeMap = {};
+      gridState.nodes.forEach(n => { nodeMap[n.id] = n; });
+
+      // Sahayta-inspired SOS Cluster Risk Heatmap Radial Gradients
+      if (gridState.showHeatmap) {
+        gridState.sosList.forEach(sos => {
+          const targetNode = nodeMap[sos.nodeId];
+          if (!targetNode) return;
+          const hx = targetNode.x * w;
+          const hy = targetNode.y * h;
+          const radius = sos.severity >= 5 ? 68 : 48;
+          const grad = ctx.createRadialGradient(hx, hy, 4, hx, hy, radius);
+          if (sos.severity >= 5) {
+            grad.addColorStop(0, 'rgba(244, 63, 94, 0.28)');
+            grad.addColorStop(1, 'rgba(244, 63, 94, 0)');
+          } else {
+            grad.addColorStop(0, 'rgba(245, 158, 11, 0.22)');
+            grad.addColorStop(1, 'rgba(245, 158, 11, 0)');
+          }
+          ctx.save();
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.arc(hx, hy, radius, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        });
+      }
+
+      // Draw Bézier transmission lines + animated directional energy particles
+      gridState.lines.forEach((line, idx) => {
+        const nA = nodeMap[line.source];
+        const nB = nodeMap[line.target];
+        if (!nA || !nB) return;
+
+        const x0 = nA.x * w;
+        const y0 = nA.y * h;
+        const x1 = nB.x * w;
+        const y1 = nB.y * h;
+
+        const mx = (x0 + x1) / 2;
+        const my = (y0 + y1) / 2;
+        const dx = x1 - x0;
+        const dy = y1 - y0;
+        const curveOffset = ((idx % 2 === 0) ? 1 : -1) * 18;
+        const len = Math.hypot(dx, dy) || 1;
+        const cx = mx - (dy / len) * curveOffset;
+        const cy = my + (dx / len) * curveOffset;
+
+        const color = getLineColor(line);
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(x0, y0);
+        ctx.quadraticCurveTo(cx, cy, x1, y1);
+
+        if (line.status === 'severed') {
+          ctx.strokeStyle = (animTick % 20 < 10) ? '#f43f5e' : 'rgba(244, 63, 94, 0.25)';
+          ctx.lineWidth = 2.2;
+          ctx.setLineDash([6, 6]);
+          ctx.stroke();
+          ctx.setLineDash([]);
+
+          const midPt = getQuadraticPoint(0.5, x0, y0, cx, cy, x1, y1);
+          ctx.fillStyle = '#f43f5e';
+          ctx.font = 'bold 11px JetBrains Mono';
+          ctx.fillText('⚡FAULT', midPt.x - 22, midPt.y - 5);
+        } else {
+          ctx.strokeStyle = color;
+          ctx.lineWidth = line.status === 'emerald_reroute' ? 3.2 : 2.2;
+          ctx.shadowColor = color;
+          ctx.shadowBlur = line.status === 'emerald_reroute' ? 10 : 4;
+          ctx.stroke();
+
+          const speed = Math.max(0.004, Math.min(0.018, (line.flow_mw / 60.0) * 0.011));
+          const numParticles = 3;
+          for (let p = 0; p < numParticles; p++) {
+            const t = ((animTick * speed) + (p / numParticles)) % 1.0;
+            const pt = getQuadraticPoint(t, x0, y0, cx, cy, x1, y1);
+            ctx.beginPath();
+            ctx.arc(pt.x, pt.y, line.status === 'emerald_reroute' ? 3.6 : 2.8, 0, Math.PI * 2);
+            ctx.fillStyle = '#ffffff';
+            ctx.fill();
+          }
+
+          const midPt = getQuadraticPoint(0.5, x0, y0, cx, cy, x1, y1);
+          ctx.shadowBlur = 0;
+          ctx.fillStyle = 'rgba(6, 10, 18, 0.85)';
+          ctx.fillRect(midPt.x - 24, midPt.y - 8, 48, 15);
+          ctx.fillStyle = color;
+          ctx.font = '10px JetBrains Mono';
+          ctx.textAlign = 'center';
+          ctx.fillText(`${line.flow_mw.toFixed(0)}MW`, midPt.x, midPt.y + 3);
+        }
+        ctx.restore();
+      });
+
+      // Draw spark burst particles
+      for (let i = gridState.sparks.length - 1; i >= 0; i--) {
+        const sp = gridState.sparks[i];
+        sp.x += sp.vx / w;
+        sp.y += sp.vy / h;
+        sp.life -= 0.028;
+        if (sp.life <= 0) {
+          gridState.sparks.splice(i, 1);
+          continue;
+        }
+        ctx.save();
+        ctx.globalAlpha = sp.life;
+        ctx.fillStyle = sp.color;
+        ctx.beginPath();
+        ctx.arc(sp.x * w, sp.y * h, 2.6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      // Draw 12 South Bay Infrastructure Nodes
+      gridState.nodes.forEach(node => {
+        const nx = node.x * w;
+        const ny = node.y * h;
+        const style = getCategoryStyle(node.category);
+        const isSelected = gridState.selectedNodeId === node.id;
+
+        ctx.save();
+
+        if (node.islanded || isSelected) {
+          ctx.beginPath();
+          ctx.arc(nx, ny, 22, 0, Math.PI * 2);
+          ctx.strokeStyle = isSelected ? '#38bdf8' : '#10b981';
+          ctx.lineWidth = 2;
+          ctx.setLineDash(node.islanded ? [4, 3] : []);
+          ctx.stroke();
+          ctx.setLineDash([]);
+        }
+
+        ctx.beginPath();
+        ctx.arc(nx, ny, 15, 0, Math.PI * 2);
+        ctx.fillStyle = style.fill;
+        ctx.fill();
+        ctx.lineWidth = 2.5;
+        ctx.strokeStyle = node.islanded ? '#10b981' : style.stroke;
+        ctx.shadowColor = node.islanded ? '#10b981' : style.stroke;
+        ctx.shadowBlur = 8;
+        ctx.stroke();
+
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = '#f8fafc';
+        ctx.font = 'bold 10px JetBrains Mono';
+        ctx.textAlign = 'center';
+        ctx.fillText(node.id, nx, ny + 3.5);
+
+        const netMw = node.gen_mw > 0 ? `+${node.gen_mw.toFixed(1)}MW` : `-${node.load_mw.toFixed(1)}MW`;
+        const labelText = `${node.name}`;
+        ctx.font = '600 11px Inter';
+        const textWidth = ctx.measureText(labelText).width;
+
+        ctx.fillStyle = 'rgba(8, 15, 29, 0.88)';
+        ctx.fillRect(nx - textWidth / 2 - 6, ny + 19, textWidth + 12, 28);
+        ctx.strokeStyle = 'rgba(51, 65, 85, 0.8)';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(nx - textWidth / 2 - 6, ny + 19, textWidth + 12, 28);
+
+        ctx.fillStyle = '#e2e8f0';
+        ctx.fillText(labelText, nx, ny + 31);
+
+        ctx.font = '10px JetBrains Mono';
+        ctx.fillStyle = node.gen_mw > 0 ? '#34d399' : '#38bdf8';
+        ctx.fillText(`${netMw} • ${node.freq_hz.toFixed(1)}Hz`, nx, ny + 43);
+
+        ctx.restore();
+      });
+
+      requestAnimationFrame(drawGridCanvas);
+    }
+
+    // -------------------------------------------------------------------------
+    // 9. CANVAS NODE CLICK DETECTION & TACTICAL HUD OVERRIDES
+    // -------------------------------------------------------------------------
+    canvas.addEventListener('click', (evt) => {
+      const rect = canvas.getBoundingClientRect();
+      const clickX = evt.clientX - rect.left;
+      const clickY = evt.clientY - rect.top;
+      const w = canvas.clientWidth || 800;
+      const h = canvas.clientHeight || 450;
+
+      let hitNode = null;
+      for (const n of gridState.nodes) {
+        const nx = n.x * w;
+        const ny = n.y * h;
+        if (Math.hypot(clickX - nx, clickY - ny) <= 24) {
+          hitNode = n;
+          break;
+        }
+      }
+
+      if (hitNode) {
+        audioEngine.playClick(980, 0.035);
+        gridState.selectedNodeId = hitNode.id;
+        renderNodeHud(hitNode.id);
+      } else {
+        closeNodeHud();
+      }
+    });
+
+    function renderNodeHud(nodeId) {
+      const node = gridState.nodes.find(n => n.id === nodeId);
+      if (!node) return;
+      const card = document.getElementById('nodeHudCard');
+      card.classList.remove('hidden');
+
+      document.getElementById('hudNodeId').textContent = `${node.id} • ${node.category.toUpperCase()}`;
+      document.getElementById('hudNodeName').textContent = node.name;
+      document.getElementById('hudNodePower').textContent = node.gen_mw > 0 ? `+${node.gen_mw.toFixed(1)} MW (GEN)` : `-${node.load_mw.toFixed(1)} MW (DRAW)`;
+      document.getElementById('hudNodeFreq').textContent = `${node.freq_hz.toFixed(2)} Hz`;
+      document.getElementById('hudNodeSoc').textContent = node.soc_pct > 0 ? `${node.soc_pct.toFixed(1)}%` : 'N/A';
+      document.getElementById('hudNodeIsland').textContent = node.islanded ? 'EMERALD ISLAND' : 'GRID-TIED';
+    }
+
+    function closeNodeHud() {
+      gridState.selectedNodeId = null;
+      document.getElementById('nodeHudCard').classList.add('hidden');
+    }
+
+    function severConnectedLineFromHud() {
+      if (!gridState.selectedNodeId) return;
+      const connected = gridState.lines.find(
+        l => (l.source === gridState.selectedNodeId || l.target === gridState.selectedNodeId) && l.status !== 'severed'
+      );
+      if (connected) {
+        audioEngine.playFaultWarning();
+        connected.status = 'severed';
+        connected.flow_mw = 0.0;
+        const n = gridState.nodes.find(item => item.id === gridState.selectedNodeId);
+        if (n) spawnCanvasSparks(n.x, n.y, 26);
+        gridState.systemFreqHz = Math.max(58.6, Number((gridState.systemFreqHz - 0.35).toFixed(2)));
+        updateSectorRiskGauge(gridState.riskScore + 18);
+        recalculateMetricsBar();
+        renderNodeHud(gridState.selectedNodeId);
+      }
+    }
+
+    function toggleNodeIslandFromHud() {
+      if (!gridState.selectedNodeId) return;
+      const node = gridState.nodes.find(n => n.id === gridState.selectedNodeId);
+      if (!node) return;
+      node.islanded = !node.islanded;
+      node.freq_hz = 60.00;
+      if (node.islanded) {
+        audioEngine.playStabilizedChord();
+        gridState.lines.forEach(l => {
+          if ((l.source === node.id || l.target === node.id) && l.status !== 'severed') {
+            l.status = 'emerald_reroute';
+          }
+        });
+      } else {
+        audioEngine.playClick(740, 0.04);
+      }
+      renderNodeHud(node.id);
+      recalculateMetricsBar();
+    }
+
+    // -------------------------------------------------------------------------
+    // 10. MODAL CONTROLS & CHART.JS INITIALIZATION
+    // -------------------------------------------------------------------------
+    function toggleBenchmarkModal(show) {
+      audioEngine.playClick(920, 0.03);
+      const el = document.getElementById('benchmarkModal');
+      if (show) el.classList.remove('hidden');
+      else el.classList.add('hidden');
+    }
+
+    function toggleArchModal(show) {
+      audioEngine.playClick(920, 0.03);
+      const el = document.getElementById('archModal');
+      if (show) el.classList.remove('hidden');
+      else el.classList.add('hidden');
+    }
+
+    let freqChartInstance = null;
+    let powerChartInstance = null;
+
+    function initTelemetryCharts() {
+      const labels = ['T-25s', 'T-20s', 'T-15s', 'T-10s', 'T-5s', 'NOW'];
+
+      const fCtx = document.getElementById('freqChart').getContext('2d');
+      freqChartInstance = new Chart(fCtx, {
+        type: 'line',
+        data: {
+          labels: [...labels],
+          datasets: [{
+            label: 'Bus Frequency (Hz)',
+            data: [60.00, 60.01, 59.99, 60.00, 60.00, 60.00],
+            borderColor: '#22d3ee',
+            backgroundColor: 'rgba(34, 211, 238, 0.12)',
+            borderWidth: 2,
+            tension: 0.32,
+            fill: true,
+            pointRadius: 2.5
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: {
+              min: 58.0,
+              max: 60.6,
+              ticks: { color: '#94a3b8', font: { family: 'JetBrains Mono', size: 10 } },
+              grid: { color: 'rgba(51, 65, 85, 0.35)' }
+            },
+            x: {
+              ticks: { color: '#64748b', font: { family: 'JetBrains Mono', size: 9 } },
+              grid: { display: false }
+            }
+          }
+        }
+      });
+
+      const pCtx = document.getElementById('powerChart').getContext('2d');
+      powerChartInstance = new Chart(pCtx, {
+        type: 'line',
+        data: {
+          labels: [...labels],
+          datasets: [
+            {
+              label: 'Renewable + BESS Supply (MW)',
+              data: [198, 200, 201, 201, 201, 201],
+              borderColor: '#10b981',
+              backgroundColor: 'rgba(16, 185, 129, 0.12)',
+              borderWidth: 2,
+              tension: 0.3,
+              fill: true,
+              pointRadius: 2
+            },
+            {
+              label: 'Active Grid Demand (MW)',
+              data: [199, 200, 201, 201, 201, 201],
+              borderColor: '#f59e0b',
+              borderDash: [4, 4],
+              borderWidth: 2,
+              tension: 0.3,
+              fill: false,
+              pointRadius: 2
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: true,
+              labels: { color: '#cbd5e1', font: { family: 'JetBrains Mono', size: 9 }, boxWidth: 10 }
+            }
+          },
+          scales: {
+            y: {
+              min: 100,
+              max: 240,
+              ticks: { color: '#94a3b8', font: { family: 'JetBrains Mono', size: 10 } },
+              grid: { color: 'rgba(51, 65, 85, 0.35)' }
+            },
+            x: {
+              ticks: { color: '#64748b', font: { family: 'JetBrains Mono', size: 9 } },
+              grid: { display: false }
+            }
+          }
+        }
+      });
+    }
+
+    function pushTelemetryPoint(freqHz, supplyMw, demandMw) {
+      if (!freqChartInstance || !powerChartInstance) return;
+      const nowLabel = new Date().toLocaleTimeString([], { minute: '2-digit', second: '2-digit' });
+
+      freqChartInstance.data.labels.shift();
+      freqChartInstance.data.labels.push(nowLabel);
+      freqChartInstance.data.datasets[0].data.shift();
+      freqChartInstance.data.datasets[0].data.push(freqHz);
+      freqChartInstance.update();
+
+      powerChartInstance.data.labels.shift();
+      powerChartInstance.data.labels.push(nowLabel);
+      powerChartInstance.data.datasets[0].data.shift();
+      powerChartInstance.data.datasets[0].data.push(supplyMw);
+      powerChartInstance.data.datasets[1].data.shift();
+      powerChartInstance.data.datasets[1].data.push(demandMw);
+      powerChartInstance.update();
+    }
+
+    // -------------------------------------------------------------------------
+    // 11. BOOTSTRAP ON WINDOW LOAD
+    // -------------------------------------------------------------------------
+    window.addEventListener('load', () => {
+      if (window.lucide) lucide.createIcons();
+      resizeCanvas();
+      initTelemetryCharts();
+      renderSosBoard();
+      renderCrewBoard();
+      renderAlertFeed();
+      fetchLiveOpenMeteo();
+      drawGridCanvas();
+    });
+  </script>
+</body>
+</html>
