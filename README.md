@@ -49,7 +49,7 @@ Vercel Python serverless function (`api/index.py` + `vercel.json`):
    - Framework Preset: **Other**
 2. **Settings → Environment Variables** (Production):
    - `GEMINI_API_KEY` = your Gemini API key
-   - `GEMINI_MODEL` = `gemini-2.5-flash` (optional; this is the default)
+   - `GEMINI_MODEL` = `gemini-3.8-flash` (optional; this is the default)
 3. **Redeploy** — env vars only apply to deployments created after they are set.
 4. Verify: open `https://<your-deployment>.vercel.app/api/health` — it must show
    `"llm_configured": true`. Then `POST /api/crisis` responses will show

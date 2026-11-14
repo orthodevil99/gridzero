@@ -137,7 +137,7 @@
           </span>
         </div>
         <p id="i18nHeaderSubtitle" class="text-[11px] text-slate-400 hidden sm:block">
-          South Bay 12-Node Micro-Grid • Deterministic DC Power-Flow Verifier + <span class="text-cyan-300 font-mono-tech">gemini-2.5-flash</span>
+          South Bay 12-Node Micro-Grid • Deterministic DC Power-Flow Verifier + <span class="text-cyan-300 font-mono-tech">gemini-3.8-flash</span>
         </p>
       </div>
     </div>
@@ -757,7 +757,7 @@
           <thead>
             <tr class="border-b border-slate-800 text-slate-400">
               <th class="py-2 px-2.5">Contingency Scenario</th>
-              <th class="py-2 px-2.5">Raw Unverified LLM (gemini-2.5-flash)</th>
+              <th class="py-2 px-2.5">Raw Unverified LLM (gemini-3.8-flash)</th>
               <th class="py-2 px-2.5">GridZero Neuro-Symbolic Solver</th>
             </tr>
           </thead>
@@ -821,7 +821,7 @@
         </div>
 
         <div class="bg-slate-900/90 border border-slate-800 p-4 rounded-xl">
-          <h3 class="font-bold text-amber-300 font-mono-tech mb-1.5">3. Three Sequential Gemini 2.5 Flash Agents</h3>
+          <h3 class="font-bold text-amber-300 font-mono-tech mb-1.5">3. Three Sequential Gemini 3.8 Flash Agents</h3>
           <p class="text-slate-300">
             <strong>AGENT-01</strong> runs BFS/Dijkstra fault isolation; <strong>AGENT-02</strong> computes Megapack SoC depletion countdowns &amp; minimum HVAC load shedding; <strong>AGENT-03</strong> executes the neuro-symbolic self-correction loop until 0 physics violations remain.
           </p>
@@ -1625,7 +1625,7 @@
           latency_ms: 142,
           payload: {
             agent: 'AGENT-01 [GridTopology & Fault Isolator]',
-            model: 'gemini-2.5-flash',
+            model: 'gemini-3.8-flash',
             algorithm: 'BFS_Subgrid_Search + Dijkstra_Min_Impedance',
             severed_corridors: ['L01 (Santa Cruz 230kV)', 'L02 (Los Gatos 115kV)', 'L03 (Monta Vista–VMC)'],
             solar_plume_derate: '-65% (Los Gatos Array -> 22.5 MW)',
@@ -1637,7 +1637,7 @@
           latency_ms: 168,
           payload: {
             agent: 'AGENT-02 [Battery Arbitrage & Load Forecaster]',
-            model: 'gemini-2.5-flash',
+            model: 'gemini-3.8-flash',
             N06_San_Jose_BESS1: '88% SoC -> Discharge 46.0 MW (3.44h buffer)',
             N07_Cupertino_BESS2: '84% SoC -> Discharge 38.0 MW (3.32h buffer)',
             combined_hospital_autonomy: '6.76 Hours @ 100% Critical Load',
@@ -1658,7 +1658,7 @@
           latency_ms: 214,
           payload: {
             agent: 'AGENT-03 [Neuro-Symbolic Dispatch & Carbon Optimizer]',
-            model: 'gemini-2.5-flash',
+            model: 'gemini-3.8-flash',
             self_correction_iterations: 2,
             draft_1_verdict: 'REJECTED (ERR_LINE_THERMAL_OVERLOAD_118PCT on L12)',
             attempt_2_verdict: 'VERIFIED_SAFE (0 Thermal Violations, Bus Freq = 60.00 Hz)',
@@ -1680,7 +1680,7 @@
           latency_ms: 136,
           payload: {
             agent: 'AGENT-01 [GridTopology & Fault Isolator]',
-            model: 'gemini-2.5-flash',
+            model: 'gemini-3.8-flash',
             algorithm: 'BFS_Subgrid_Search + Transformer_Differential_87T',
             severed_corridors: ['L11 (Altamont 500kV)', 'L12 (Metcalf–Downtown)', 'L13 (Metcalf–Trauma Hub)'],
             frequency_nadir_hz: 58.30,
@@ -1692,7 +1692,7 @@
           latency_ms: 159,
           payload: {
             agent: 'AGENT-02 [Battery Arbitrage & Load Forecaster]',
-            model: 'gemini-2.5-flash',
+            model: 'gemini-3.8-flash',
             N06_San_Jose_BESS1: '88% SoC -> Fast Frequency Injection 48.0 MW',
             N07_Cupertino_BESS2: '84% SoC -> Fast Frequency Injection 36.0 MW',
             combined_hospital_autonomy: '6.80 Hours @ 100% Critical Load',
@@ -1713,7 +1713,7 @@
           latency_ms: 198,
           payload: {
             agent: 'AGENT-03 [Neuro-Symbolic Dispatch & Carbon Optimizer]',
-            model: 'gemini-2.5-flash',
+            model: 'gemini-3.8-flash',
             self_correction_iterations: 2,
             draft_1_verdict: 'REJECTED (ERR_LINE_THERMAL_OVERLOAD_118PCT on L17)',
             attempt_2_verdict: 'VERIFIED_SAFE (0 Thermal Violations, Bus Freq = 60.00 Hz)',
@@ -1735,7 +1735,7 @@
           latency_ms: 149,
           payload: {
             agent: 'AGENT-01 [GridTopology & Fault Isolator]',
-            model: 'gemini-2.5-flash',
+            model: 'gemini-3.8-flash',
             algorithm: 'Kalman_ChiSquare_BadData_Filter + BFS_Isolation',
             severed_corridors: ['L04 (North Bay Tech Trunk)', 'L10 (Silicon Corridor Intertie)'],
             cyber_signature: 'Forged DNP3 220% Load Surge on N10 & N11',
@@ -1747,7 +1747,7 @@
           latency_ms: 163,
           payload: {
             agent: 'AGENT-02 [Battery Arbitrage & Load Forecaster]',
-            model: 'gemini-2.5-flash',
+            model: 'gemini-3.8-flash',
             N06_San_Jose_BESS1: '88% SoC -> Zero-Trust Buffer 44.0 MW',
             N07_Cupertino_BESS2: '84% SoC -> Zero-Trust Buffer 36.0 MW',
             combined_hospital_autonomy: '7.10 Hours @ 100% Critical Load',
@@ -1768,7 +1768,7 @@
           latency_ms: 209,
           payload: {
             agent: 'AGENT-03 [Neuro-Symbolic Dispatch & Carbon Optimizer]',
-            model: 'gemini-2.5-flash',
+            model: 'gemini-3.8-flash',
             self_correction_iterations: 2,
             draft_1_verdict: 'REJECTED (ERR_LINE_THERMAL_OVERLOAD_118PCT on L09)',
             attempt_2_verdict: 'VERIFIED_SAFE (0 Thermal Violations, Bus Freq = 60.00 Hz)',

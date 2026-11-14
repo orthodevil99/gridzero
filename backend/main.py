@@ -38,8 +38,8 @@ except ImportError:
 # Environment Variables -> GEMINI_API_KEY). It is never shipped to the
 # frontend and never hardcoded. GEMINI_MODEL must be a real model id that
 # the key can access; gemini-2.5-flash is the safe default.
-GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash").strip() or "gemini-2.5-flash"
-GEMINI_FALLBACK_MODELS = list(dict.fromkeys([GEMINI_MODEL, "gemini-2.5-flash", "gemini-2.0-flash"]))
+GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.8-flash").strip() or "gemini-3.8-flash"
+GEMINI_FALLBACK_MODELS = list(dict.fromkeys([GEMINI_MODEL, "gemini-3.8-flash", "gemini-3.5-flash-lite", "gemini-2.5-flash"]))
 
 
 def gemini_is_configured() -> bool:
@@ -813,6 +813,7 @@ async def enrich_with_live_gemini(preset: Dict[str, Any]) -> Dict[str, Any]:
         f"Provide a concise 1-sentence power engineering rationale for the verified reroute."
     )
     last_error_type = None
+    last_error_detail = None
     for model_id in GEMINI_FALLBACK_MODELS:
         try:
             client = genai.Client(api_key=api_key)
@@ -835,13 +836,18 @@ async def enrich_with_live_gemini(preset: Dict[str, Any]) -> Dict[str, Any]:
             preset["llm_mode"] = "live_gemini_verified"
             preset["llm_model"] = model_id
             return preset
-        except Exception as exc:  # never leak the key or provider payload
+        except Exception as exc:  # never leak the key; keep only a sanitized provider message
             last_error_type = type(exc).__name__
+            detail = str(exc)[:240]
+            if api_key:
+                detail = detail.replace(api_key, "[redacted]")
+            last_error_detail = detail
             continue
 
     preset["llm_mode"] = "live_gemini_failed_fell_back_to_deterministic"
     preset["llm_model"] = GEMINI_MODEL
     preset["llm_error_type"] = last_error_type
+    preset["llm_error"] = last_error_detail
     return preset
 
 
