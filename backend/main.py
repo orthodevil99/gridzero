@@ -827,14 +827,14 @@ async def enrich_with_live_gemini(preset: Dict[str, Any]) -> Dict[str, Any]:
         # 503 "high demand" responses, so attempts retry with backoff and
         # then fall across the current Flash family.
         return genai.Client(api_key=api_key,
-                            http_options=types.HttpOptions(api_version="v1beta", timeout=15000))
+                            http_options=types.HttpOptions(api_version="v1beta", timeout=10000))
 
     attempts = [
         (GEMINI_MODEL, 0.0),
-        (GEMINI_MODEL, 2.0),
-        ("gemini-3.6-flash", 2.0),
-        ("gemini-3.5-flash-lite", 3.0),
-        ("gemini-3.1-flash-lite", 3.0),
+        ("gemini-3.6-flash", 1.0),
+        (GEMINI_MODEL, 1.0),
+        ("gemini-3.5-flash-lite", 2.0),
+        ("gemini-3.1-flash-lite", 2.0),
     ]
     last_error_type = None
     last_error_detail = None
