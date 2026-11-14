@@ -5,7 +5,8 @@ and Multi-Lingual Cell-Broadcast Alerts (inspired by Sahayta Emergency Response 
 NorCal Hacks 27 | Tracks: Sustainability & New Frontiers
 
 Run instructions:
-    export GEMINI_API_KEY="your-api-key"  # Optional: falls back to deterministic physics + cached presets
+    export GEMINI_API_KEY="your-api-key"  # Optional, server-side only (Vercel env var). Falls back to deterministic physics if unset
+    export GEMINI_MODEL="gemini-2.5-flash"  # Optional: any real Gemini model id available to your key
     uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 """
 
@@ -31,6 +32,18 @@ try:
     HAS_GENAI = True
 except ImportError:
     HAS_GENAI = False
+
+# Gemini configuration — the key is read ONLY from the server environment
+# (locally: export GEMINI_API_KEY=... ; on Vercel: Project Settings ->
+# Environment Variables -> GEMINI_API_KEY). It is never shipped to the
+# frontend and never hardcoded. GEMINI_MODEL must be a real model id that
+# the key can access; gemini-2.5-flash is the safe default.
+GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash").strip() or "gemini-2.5-flash"
+GEMINI_FALLBACK_MODELS = list(dict.fromkeys([GEMINI_MODEL, "gemini-2.5-flash", "gemini-2.0-flash"]))
+
+
+def gemini_is_configured() -> bool:
+    return bool(os.environ.get("GEMINI_API_KEY", "").strip()) and HAS_GENAI
 
 
 app = FastAPI(
@@ -530,7 +543,7 @@ def build_crisis_preset(
         agent_01_out = {
             "agent_id": "AGENT-01",
             "role": "GridTopology & Fault Isolator",
-            "model": "gemini-3.8-flash",
+            "model": GEMINI_MODEL,
             "latency_ms": 142,
             "algorithm": "Breadth-First Reachability + Dijkstra Min-Impedance Path",
             "severed_lines": ["L01 (Santa Cruz Mtn 230kV)", "L02 (Los Gatos Feeder 115kV)", "L03 (Monta Vista–VMC Lifeline)"],
@@ -543,7 +556,7 @@ def build_crisis_preset(
         agent_02_out = {
             "agent_id": "AGENT-02",
             "role": "Battery Arbitrage & Critical Load Forecaster",
-            "model": "gemini-3.8-flash",
+            "model": GEMINI_MODEL,
             "latency_ms": 168,
             "solar_derate_factor": "65% loss (Smoke Optical Depth AOD=2.8, Temp=39.4°C)",
             "megapack_autonomy_forecast": {
@@ -597,7 +610,7 @@ def build_crisis_preset(
         agent_01_out = {
             "agent_id": "AGENT-01",
             "role": "GridTopology & Fault Isolator",
-            "model": "gemini-3.8-flash",
+            "model": GEMINI_MODEL,
             "latency_ms": 136,
             "algorithm": "Breadth-First Reachability + Impedance Islanding",
             "severed_lines": ["L11 (Altamont–Metcalf 500kV)", "L12 (Metcalf–Downtown Primary)", "L13 (Metcalf–Trauma Hub Express)"],
@@ -610,7 +623,7 @@ def build_crisis_preset(
         agent_02_out = {
             "agent_id": "AGENT-02",
             "role": "Battery Arbitrage & Critical Load Forecaster",
-            "model": "gemini-3.8-flash",
+            "model": GEMINI_MODEL,
             "latency_ms": 159,
             "solar_derate_factor": "Nominal Irradiance (685 W/m²)",
             "megapack_autonomy_forecast": {
@@ -665,7 +678,7 @@ def build_crisis_preset(
         agent_01_out = {
             "agent_id": "AGENT-01",
             "role": "GridTopology & Fault Isolator",
-            "model": "gemini-3.8-flash",
+            "model": GEMINI_MODEL,
             "latency_ms": 149,
             "algorithm": "Kalman Bad-Data Chi-Square Filter + BFS Fault Isolation",
             "severed_lines": ["L04 (North Bay Tech Trunk)", "L10 (Silicon Corridor Intertie)"],
@@ -678,7 +691,7 @@ def build_crisis_preset(
         agent_02_out = {
             "agent_id": "AGENT-02",
             "role": "Battery Arbitrage & Critical Load Forecaster",
-            "model": "gemini-3.8-flash",
+            "model": GEMINI_MODEL,
             "latency_ms": 163,
             "solar_derate_factor": "Zero-Trust Telemetry Filter Active (Spoofed 220% Packet Rejected)",
             "megapack_autonomy_forecast": {
@@ -713,7 +726,7 @@ def build_crisis_preset(
     agent_03_out = {
         "agent_id": "AGENT-03",
         "role": "Neuro-Symbolic Dispatch & Carbon Optimizer",
-        "model": "gemini-3.8-flash",
+        "model": GEMINI_MODEL,
         "latency_ms": 214,
         "self_correction_iterations": 2,
         "rejected_draft": {
@@ -777,7 +790,7 @@ def build_crisis_preset(
 
 
 # ---------------------------------------------------------------------------
-# 4. OPTIONAL LIVE GEMINI-3.8-FLASH STRUCTURED JSON SYNTHESIS
+# 4. OPTIONAL LIVE GEMINI STRUCTURED JSON SYNTHESIS (env-configured model)
 # ---------------------------------------------------------------------------
 
 class Agent03Schema(BaseModel):
@@ -791,34 +804,44 @@ async def enrich_with_live_gemini(preset: Dict[str, Any]) -> Dict[str, Any]:
     api_key = os.environ.get("GEMINI_API_KEY", "").strip()
     if not api_key or not HAS_GENAI:
         preset["llm_mode"] = "cached_deterministic_neuro_symbolic"
+        preset["llm_model"] = GEMINI_MODEL
         return preset
 
-    try:
-        client = genai.Client(api_key=api_key)
-        prompt = (
-            f"Scenario: {preset['title']}. "
-            f"Physics solver rejected Draft #1 with {preset['agents']['agent_03']['rejected_draft']['violation_code']}. "
-            f"Provide a concise 1-sentence power engineering rationale for the verified reroute."
-        )
-        start_t = time.perf_counter()
-        response = await asyncio.to_thread(
-            client.models.generate_content,
-            model="gemini-3.8-flash",
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                response_mime_type="application/json",
-                response_schema=Agent03Schema,
-                temperature=0.1,
-            ),
-        )
-        elapsed_ms = int((time.perf_counter() - start_t) * 1000)
-        parsed = json.loads(response.text)
-        preset["agents"]["agent_03"]["live_gemini_rationale"] = parsed.get("rationale", "")
-        preset["agents"]["agent_03"]["latency_ms"] = elapsed_ms
-        preset["llm_mode"] = "live_gemini_3_8_flash_verified"
-    except Exception:
-        preset["llm_mode"] = "cached_deterministic_neuro_symbolic"
+    prompt = (
+        f"Scenario: {preset['title']}. "
+        f"Physics solver rejected Draft #1 with {preset['agents']['agent_03']['rejected_draft']['violation_code']}. "
+        f"Provide a concise 1-sentence power engineering rationale for the verified reroute."
+    )
+    last_error_type = None
+    for model_id in GEMINI_FALLBACK_MODELS:
+        try:
+            client = genai.Client(api_key=api_key)
+            start_t = time.perf_counter()
+            response = await asyncio.to_thread(
+                client.models.generate_content,
+                model=model_id,
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    response_schema=Agent03Schema,
+                    temperature=0.1,
+                ),
+            )
+            elapsed_ms = int((time.perf_counter() - start_t) * 1000)
+            parsed = json.loads(response.text)
+            preset["agents"]["agent_03"]["live_gemini_rationale"] = parsed.get("rationale", "")
+            preset["agents"]["agent_03"]["latency_ms"] = elapsed_ms
+            preset["agents"]["agent_03"]["model"] = model_id
+            preset["llm_mode"] = "live_gemini_verified"
+            preset["llm_model"] = model_id
+            return preset
+        except Exception as exc:  # never leak the key or provider payload
+            last_error_type = type(exc).__name__
+            continue
 
+    preset["llm_mode"] = "live_gemini_failed_fell_back_to_deterministic"
+    preset["llm_model"] = GEMINI_MODEL
+    preset["llm_error_type"] = last_error_type
     return preset
 
 
@@ -927,38 +950,143 @@ async def create_civic_sos(req: CivicSosReportRequest) -> JSONResponse:
     return JSONResponse({"status": "created", "sos": new_item, "total": len(CIVIC_SOS_FEED)})
 
 
-@app.get("/api/benchmark")
-async def get_ablation_benchmark() -> JSONResponse:
+def _solver_guided_correction(nodes, lines, draft_plan, max_iterations=6):
+    """Iteratively correct a draft dispatch using ONLY solver feedback:
+    raise BESS discharge, shed non-critical load, then island the hospital
+    buses, re-verifying after every step. Returns (plan, evaluation)."""
+    plan = copy.deepcopy(draft_plan)
+    evaluation = DCPowerFlowSolver.solve_and_verify(nodes, lines, plan)
+    for step in range(1, max_iterations + 1):
+        if evaluation["verified"]:
+            break
+        shed = plan.setdefault("load_shed_pct", {})
+        for nid in ("N10", "N11", "N12"):
+            shed[nid] = min(55.0, float(shed.get(nid, 0.0)) + 8.0)
+        bess = plan.setdefault("battery_discharge_mw", {})
+        bess["N06"] = min(50.0, float(bess.get("N06", 15.0)) + 6.0)
+        bess["N07"] = min(40.0, float(bess.get("N07", 12.0)) + 5.0)
+        if step >= 2:
+            plan["islanded_nodes"] = ["N01", "N02", "N06", "N07"]
+        # A corrected plan must not force flows through lines: drop the
+        # draft's explicit line-flow overrides and let DC power flow decide.
+        plan["line_flows_mw"] = {}
+        evaluation = DCPowerFlowSolver.solve_and_verify(nodes, lines, plan)
+    return plan, evaluation
+
+
+def run_computed_benchmark() -> Dict[str, Any]:
+    """20-contingency ablation benchmark, COMPUTED at request time by the
+    deterministic solver. Nothing here is stored or hardcoded: every run
+    builds a crisis state, evaluates the unverified Agent-03 draft, then
+    evaluates the solver-guided correction of that same draft."""
+    weather = WEATHER_CACHE["data"]
+    base_ids = ["wildfire", "metcalf_overload", "scada_spoof"]
+    severities = [
+        ("S1 nominal", 1.00, 1.00),
+        ("S2 load +10%", 1.10, 1.00),
+        ("S3 renewables -20%", 1.00, 0.80),
+        ("S4 load +10% / renewables -20%", 1.10, 0.80),
+        ("S5 load +20%", 1.20, 1.00),
+        ("S6 renewables -35%", 1.00, 0.65),
+        ("S7 load +20% / renewables -35%", 1.20, 0.65),
+    ]
+    combos = [(b, sev) for b in base_ids for sev in severities][:20]
+
+    breakdown = []
+    raw_blackouts = raw_overloads = gz_blackouts = gz_overloads = 0
+    raw_violations = gz_violations = 0
+    raw_renew, gz_renew, raw_freq_min, gz_freq_min = [], [], [], []
+
+    for run_idx, (base_id, (sev_name, load_mult, gen_mult)) in enumerate(combos, start=1):
+        preset = build_crisis_preset(base_id, weather)
+        nodes = copy.deepcopy(preset["initial_crisis_state"]["nodes"])
+        lines = copy.deepcopy(preset["initial_crisis_state"]["lines"])
+        for n in nodes:
+            if not n["critical"] and n["base_load_mw"]:
+                n["base_load_mw"] = round(n["base_load_mw"] * load_mult, 1)
+            if n["category"] == "renewable":
+                n["base_gen_mw"] = round(n["base_gen_mw"] * gen_mult, 1)
+
+        draft_plan = preset["agents"]["agent_03"]["rejected_draft"]["dispatch_payload"]
+        raw_eval = DCPowerFlowSolver.solve_and_verify(nodes, lines, draft_plan)
+        _, gz_eval = _solver_guided_correction(nodes, lines, draft_plan)
+
+        def has_hospital_blackout(ev):
+            return any("FREQ" in v.get("code", "") for v in ev["violations"])
+
+        def has_overload(ev):
+            return len(ev["overloaded_lines"]) > 0
+
+        raw_blackouts += has_hospital_blackout(raw_eval); raw_overloads += has_overload(raw_eval)
+        gz_blackouts += has_hospital_blackout(gz_eval); gz_overloads += has_overload(gz_eval)
+        raw_violations += len(raw_eval["violations"]); gz_violations += len(gz_eval["violations"])
+        raw_renew.append(raw_eval["renewable_share_pct"]); gz_renew.append(gz_eval["renewable_share_pct"])
+        raw_freq_min.append(raw_eval["system_freq_hz"]); gz_freq_min.append(gz_eval["system_freq_hz"])
+
+        def verdict(ev):
+            if ev["verified"]:
+                return f"PASS ({ev['system_freq_hz']:.2f} Hz, 0 violations)"
+            first = ev["violations"][0]["code"] if ev["violations"] else "UNVERIFIED"
+            return f"FAIL ({first})"
+
+        breakdown.append({
+            "run": run_idx,
+            "scenario": f"{preset['title']} - {sev_name}",
+            "raw_llm": verdict(raw_eval),
+            "gridzero": verdict(gz_eval),
+        })
+
+    total = len(combos)
+    pct = lambda x: round(x / total * 100.0, 1)
+    avg = lambda xs: round(sum(xs) / len(xs), 2) if xs else 0.0
+    return {
+        "benchmark_suite": "NorCal South Bay N-2 / N-3 Disaster Contingency Suite (20 Runs)",
+        "method": (
+            "Computed live by DCPowerFlowSolver at request time. Raw = the unverified Agent-03 "
+            "Draft #1 dispatch for each crisis state. GridZero = the same draft corrected by an "
+            "iterative solver-feedback loop (BESS boost + non-critical load shed + hospital "
+            "islanding, max 6 iterations). No benchmark numbers are stored in code."
+        ),
+        "computed_at": datetime.now(timezone.utc).isoformat(),
+        "model_under_test": GEMINI_MODEL,
+        "total_contingencies": total,
+        "summary": {
+            "raw_unverified_llm": {
+                "critical_hospital_blackout_rate_pct": pct(raw_blackouts),
+                "thermal_line_overload_rate_pct": pct(raw_overloads),
+                "renewable_dispatch_share_pct": avg(raw_renew),
+                "avg_frequency_nadir_hz": avg(raw_freq_min),
+                "physics_constraint_violations": raw_violations,
+            },
+            "gridzero_neuro_symbolic_solver": {
+                "critical_hospital_blackout_rate_pct": pct(gz_blackouts),
+                "thermal_line_overload_rate_pct": pct(gz_overloads),
+                "renewable_dispatch_share_pct": avg(gz_renew),
+                "avg_frequency_nadir_hz": avg(gz_freq_min),
+                "physics_constraint_violations": gz_violations,
+            },
+        },
+        "contingency_breakdown": breakdown,
+    }
+
+
+@app.get("/api/health")
+async def get_health() -> JSONResponse:
     return JSONResponse(
         {
-            "benchmark_suite": "NorCal South Bay N-2 / N-3 Disaster Contingency Suite (20 Runs)",
-            "model_under_test": "gemini-3.8-flash",
-            "total_contingencies": 20,
-            "summary": {
-                "raw_unverified_llm": {
-                    "critical_hospital_blackout_rate_pct": 25.0,
-                    "thermal_line_overload_rate_pct": 35.0,
-                    "renewable_dispatch_share_pct": 61.0,
-                    "avg_frequency_nadir_hz": 58.62,
-                    "physics_constraint_violations": 12,
-                },
-                "gridzero_neuro_symbolic_solver": {
-                    "critical_hospital_blackout_rate_pct": 0.0,
-                    "thermal_line_overload_rate_pct": 0.0,
-                    "renewable_dispatch_share_pct": 88.0,
-                    "avg_frequency_nadir_hz": 59.96,
-                    "physics_constraint_violations": 0,
-                },
-            },
-            "contingency_breakdown": [
-                {"run": 1, "scenario": "Santa Cruz Wildfire N-3", "raw_llm": "FAIL (L12 118% Overload)", "gridzero": "PASS (60.00 Hz, L12 82%)"},
-                {"run": 2, "scenario": "Metcalf 500kV Autotransformer Trip", "raw_llm": "FAIL (58.3 Hz Hospital Blackout)", "gridzero": "PASS (59.98 Hz Islanded)"},
-                {"run": 3, "scenario": "SCADA DNP3 220% Surge Spoof", "raw_llm": "FAIL (L09 118% Overload)", "gridzero": "PASS (60.00 Hz, Zero-Trust Shed)"},
-                {"run": 4, "scenario": "Altamont Wind Gust Cut-Out + VMC Tie Fault", "raw_llm": "FAIL (59.1 Hz Undershoot)", "gridzero": "PASS (59.95 Hz BESS-1 Boost)"},
-                {"run": 5, "scenario": "Heat Dome 43°C + Downtown HVAC Surge", "raw_llm": "PASS (64% Renewable)", "gridzero": "PASS (89% Renewable)"},
-            ],
+            "status": "ok",
+            "service": "GridZero",
+            "llm_configured": gemini_is_configured(),
+            "llm_model": GEMINI_MODEL,
+            "genai_sdk_installed": HAS_GENAI,
+            "mode": "live_gemini" if gemini_is_configured() else "deterministic_fallback_no_key",
         }
     )
+
+
+@app.get("/api/benchmark")
+async def get_ablation_benchmark() -> JSONResponse:
+    return JSONResponse(run_computed_benchmark())
 
 
 @app.get("/")

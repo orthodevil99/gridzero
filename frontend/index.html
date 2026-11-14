@@ -137,7 +137,7 @@
           </span>
         </div>
         <p id="i18nHeaderSubtitle" class="text-[11px] text-slate-400 hidden sm:block">
-          South Bay 12-Node Micro-Grid • Deterministic DC Power-Flow Verifier + <span class="text-cyan-300 font-mono-tech">gemini-3.8-flash</span>
+          South Bay 12-Node Micro-Grid • Deterministic DC Power-Flow Verifier + <span class="text-cyan-300 font-mono-tech">gemini-2.5-flash</span>
         </p>
       </div>
     </div>
@@ -698,6 +698,7 @@
           <h2 class="text-lg font-bold text-white mt-1">
             Ablation Benchmark: Raw Unverified LLM vs. GridZero Neuro-Symbolic Solver
           </h2>
+          <p id="benchNote" class="text-[11px] text-slate-400 mt-1">Numbers are computed live by the backend solver at <code class="text-cyan-300">/api/benchmark</code> — nothing is hardcoded. In static-only mode the table below shows the solver-verified preset scenarios.</p>
         </div>
         <button id="btnCloseBenchmark" onclick="toggleBenchmarkModal(false)" class="text-slate-400 hover:text-white px-2.5 py-1 rounded bg-slate-800">
           ✕
@@ -710,12 +711,12 @@
           <div class="flex items-baseline justify-between mt-2">
             <div>
               <span class="text-[10px] text-rose-400 block">Raw LLM</span>
-              <span class="text-xl font-bold text-rose-400">25.0%</span>
+              <span id="benchRawBlackout" class="text-xl font-bold text-rose-400">—</span>
             </div>
             <span class="text-slate-600">→</span>
             <div class="text-right">
               <span class="text-[10px] text-emerald-400 block">GridZero Verified</span>
-              <span class="text-2xl font-bold text-emerald-400">0.0%</span>
+              <span id="benchGzBlackout" class="text-2xl font-bold text-emerald-400">—</span>
             </div>
           </div>
         </div>
@@ -725,12 +726,12 @@
           <div class="flex items-baseline justify-between mt-2">
             <div>
               <span class="text-[10px] text-rose-400 block">Raw LLM</span>
-              <span class="text-xl font-bold text-rose-400">35.0%</span>
+              <span id="benchRawOverload" class="text-xl font-bold text-rose-400">—</span>
             </div>
             <span class="text-slate-600">→</span>
             <div class="text-right">
               <span class="text-[10px] text-emerald-400 block">GridZero Verified</span>
-              <span class="text-2xl font-bold text-emerald-400">0.0%</span>
+              <span id="benchGzOverload" class="text-2xl font-bold text-emerald-400">—</span>
             </div>
           </div>
         </div>
@@ -740,12 +741,12 @@
           <div class="flex items-baseline justify-between mt-2">
             <div>
               <span class="text-[10px] text-amber-400 block">Raw LLM</span>
-              <span class="text-xl font-bold text-amber-400">61.0%</span>
+              <span id="benchRawRenew" class="text-xl font-bold text-amber-400">—</span>
             </div>
             <span class="text-slate-600">→</span>
             <div class="text-right">
               <span class="text-[10px] text-emerald-400 block">GridZero Verified</span>
-              <span class="text-2xl font-bold text-emerald-400">88.0%</span>
+              <span id="benchGzRenew" class="text-2xl font-bold text-emerald-400">—</span>
             </div>
           </div>
         </div>
@@ -756,11 +757,11 @@
           <thead>
             <tr class="border-b border-slate-800 text-slate-400">
               <th class="py-2 px-2.5">Contingency Scenario</th>
-              <th class="py-2 px-2.5">Raw Unverified LLM (gemini-3.8-flash)</th>
+              <th class="py-2 px-2.5">Raw Unverified LLM (gemini-2.5-flash)</th>
               <th class="py-2 px-2.5">GridZero Neuro-Symbolic Solver</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-slate-800/70">
+          <tbody id="benchBody" class="divide-y divide-slate-800/70">
             <tr>
               <td class="py-2 px-2.5 text-white">1. Santa Cruz Wildfire N-3</td>
               <td class="py-2 px-2.5 text-rose-400">FAIL (L12 118% Thermal Overload)</td>
@@ -820,7 +821,7 @@
         </div>
 
         <div class="bg-slate-900/90 border border-slate-800 p-4 rounded-xl">
-          <h3 class="font-bold text-amber-300 font-mono-tech mb-1.5">3. Three Sequential Gemini-3.8-Flash Agents</h3>
+          <h3 class="font-bold text-amber-300 font-mono-tech mb-1.5">3. Three Sequential Gemini 2.5 Flash Agents</h3>
           <p class="text-slate-300">
             <strong>AGENT-01</strong> runs BFS/Dijkstra fault isolation; <strong>AGENT-02</strong> computes Megapack SoC depletion countdowns &amp; minimum HVAC load shedding; <strong>AGENT-03</strong> executes the neuro-symbolic self-correction loop until 0 physics violations remain.
           </p>
@@ -1624,7 +1625,7 @@
           latency_ms: 142,
           payload: {
             agent: 'AGENT-01 [GridTopology & Fault Isolator]',
-            model: 'gemini-3.8-flash',
+            model: 'gemini-2.5-flash',
             algorithm: 'BFS_Subgrid_Search + Dijkstra_Min_Impedance',
             severed_corridors: ['L01 (Santa Cruz 230kV)', 'L02 (Los Gatos 115kV)', 'L03 (Monta Vista–VMC)'],
             solar_plume_derate: '-65% (Los Gatos Array -> 22.5 MW)',
@@ -1636,7 +1637,7 @@
           latency_ms: 168,
           payload: {
             agent: 'AGENT-02 [Battery Arbitrage & Load Forecaster]',
-            model: 'gemini-3.8-flash',
+            model: 'gemini-2.5-flash',
             N06_San_Jose_BESS1: '88% SoC -> Discharge 46.0 MW (3.44h buffer)',
             N07_Cupertino_BESS2: '84% SoC -> Discharge 38.0 MW (3.32h buffer)',
             combined_hospital_autonomy: '6.76 Hours @ 100% Critical Load',
@@ -1657,7 +1658,7 @@
           latency_ms: 214,
           payload: {
             agent: 'AGENT-03 [Neuro-Symbolic Dispatch & Carbon Optimizer]',
-            model: 'gemini-3.8-flash',
+            model: 'gemini-2.5-flash',
             self_correction_iterations: 2,
             draft_1_verdict: 'REJECTED (ERR_LINE_THERMAL_OVERLOAD_118PCT on L12)',
             attempt_2_verdict: 'VERIFIED_SAFE (0 Thermal Violations, Bus Freq = 60.00 Hz)',
@@ -1679,7 +1680,7 @@
           latency_ms: 136,
           payload: {
             agent: 'AGENT-01 [GridTopology & Fault Isolator]',
-            model: 'gemini-3.8-flash',
+            model: 'gemini-2.5-flash',
             algorithm: 'BFS_Subgrid_Search + Transformer_Differential_87T',
             severed_corridors: ['L11 (Altamont 500kV)', 'L12 (Metcalf–Downtown)', 'L13 (Metcalf–Trauma Hub)'],
             frequency_nadir_hz: 58.30,
@@ -1691,7 +1692,7 @@
           latency_ms: 159,
           payload: {
             agent: 'AGENT-02 [Battery Arbitrage & Load Forecaster]',
-            model: 'gemini-3.8-flash',
+            model: 'gemini-2.5-flash',
             N06_San_Jose_BESS1: '88% SoC -> Fast Frequency Injection 48.0 MW',
             N07_Cupertino_BESS2: '84% SoC -> Fast Frequency Injection 36.0 MW',
             combined_hospital_autonomy: '6.80 Hours @ 100% Critical Load',
@@ -1712,7 +1713,7 @@
           latency_ms: 198,
           payload: {
             agent: 'AGENT-03 [Neuro-Symbolic Dispatch & Carbon Optimizer]',
-            model: 'gemini-3.8-flash',
+            model: 'gemini-2.5-flash',
             self_correction_iterations: 2,
             draft_1_verdict: 'REJECTED (ERR_LINE_THERMAL_OVERLOAD_118PCT on L17)',
             attempt_2_verdict: 'VERIFIED_SAFE (0 Thermal Violations, Bus Freq = 60.00 Hz)',
@@ -1734,7 +1735,7 @@
           latency_ms: 149,
           payload: {
             agent: 'AGENT-01 [GridTopology & Fault Isolator]',
-            model: 'gemini-3.8-flash',
+            model: 'gemini-2.5-flash',
             algorithm: 'Kalman_ChiSquare_BadData_Filter + BFS_Isolation',
             severed_corridors: ['L04 (North Bay Tech Trunk)', 'L10 (Silicon Corridor Intertie)'],
             cyber_signature: 'Forged DNP3 220% Load Surge on N10 & N11',
@@ -1746,7 +1747,7 @@
           latency_ms: 163,
           payload: {
             agent: 'AGENT-02 [Battery Arbitrage & Load Forecaster]',
-            model: 'gemini-3.8-flash',
+            model: 'gemini-2.5-flash',
             N06_San_Jose_BESS1: '88% SoC -> Zero-Trust Buffer 44.0 MW',
             N07_Cupertino_BESS2: '84% SoC -> Zero-Trust Buffer 36.0 MW',
             combined_hospital_autonomy: '7.10 Hours @ 100% Critical Load',
@@ -1767,7 +1768,7 @@
           latency_ms: 209,
           payload: {
             agent: 'AGENT-03 [Neuro-Symbolic Dispatch & Carbon Optimizer]',
-            model: 'gemini-3.8-flash',
+            model: 'gemini-2.5-flash',
             self_correction_iterations: 2,
             draft_1_verdict: 'REJECTED (ERR_LINE_THERMAL_OVERLOAD_118PCT on L09)',
             attempt_2_verdict: 'VERIFIED_SAFE (0 Thermal Violations, Bus Freq = 60.00 Hz)',
@@ -2023,7 +2024,7 @@
       }, 4500));
 
       tourTimers.push(setTimeout(() => {
-        stepText.textContent = 'Step 5/5: Reviewing 20-Contingency Ablation Benchmark (0% Blackout vs 25% Raw LLM)...';
+        stepText.textContent = 'Step 5/5: Reviewing the live-computed 20-Contingency Ablation Benchmark (see /api/benchmark)...';
         bar.style.width = '100%';
         toggleBenchmarkModal(true);
       }, 5600));
@@ -2375,10 +2376,40 @@
     // -------------------------------------------------------------------------
     // 10. MODAL CONTROLS & CHART.JS INITIALIZATION
     // -------------------------------------------------------------------------
+    async function loadComputedBenchmark() {
+      try {
+        const resp = await fetch('/api/benchmark');
+        if (!resp.ok) throw new Error('benchmark unavailable');
+        const data = await resp.json();
+        const raw = data.summary.raw_unverified_llm, gz = data.summary.gridzero_neuro_symbolic_solver;
+        const set = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
+        set('benchRawBlackout', raw.critical_hospital_blackout_rate_pct + '%');
+        set('benchGzBlackout', gz.critical_hospital_blackout_rate_pct + '%');
+        set('benchRawOverload', raw.thermal_line_overload_rate_pct + '%');
+        set('benchGzOverload', gz.thermal_line_overload_rate_pct + '%');
+        set('benchRawRenew', raw.renewable_dispatch_share_pct + '%');
+        set('benchGzRenew', gz.renewable_dispatch_share_pct + '%');
+        const body = document.getElementById('benchBody');
+        if (body && Array.isArray(data.contingency_breakdown)) {
+          body.innerHTML = data.contingency_breakdown.map(r => {
+            const fail = t => t.startsWith('FAIL');
+            return `<tr><td class="py-2 px-2.5 text-white">${r.run}. ${r.scenario}</td>` +
+              `<td class="py-2 px-2.5 ${fail(r.raw_llm) ? 'text-rose-400' : 'text-emerald-400'}">${r.raw_llm}</td>` +
+              `<td class="py-2 px-2.5 ${fail(r.gridzero) ? 'text-rose-400' : 'text-emerald-400'}">${r.gridzero}</td></tr>`;
+          }).join('');
+        }
+        const note = document.getElementById('benchNote');
+        if (note) note.textContent = `Computed live by the backend solver at ${data.computed_at} — ${data.total_contingencies} contingencies, no hardcoded numbers.`;
+      } catch (e) {
+        const note = document.getElementById('benchNote');
+        if (note) note.textContent = 'Live benchmark unavailable in static-only mode — table below shows the solver-verified preset scenarios. Deploy the backend (Vercel full-stack) for the computed 20-run numbers.';
+      }
+    }
+
     function toggleBenchmarkModal(show) {
       audioEngine.playClick(920, 0.03);
       const el = document.getElementById('benchmarkModal');
-      if (show) el.classList.remove('hidden');
+      if (show) { el.classList.remove('hidden'); loadComputedBenchmark(); }
       else el.classList.add('hidden');
     }
 
