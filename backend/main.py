@@ -818,29 +818,30 @@ async def enrich_with_live_gemini(preset: Dict[str, Any]) -> Dict[str, Any]:
     # Use api version v1beta instead"), so the Vertex attempt pins v1beta.
     # Every attempt has a hard timeout so a slow provider can never hang
     # the crisis endpoint; the deterministic fallback always answers.
-    def _client(vertex: bool):
-        if vertex:
-            return genai.Client(
-                vertexai=True,
-                api_key=api_key,
-                http_options=types.HttpOptions(api_version="v1beta", timeout=12000),
-            )
-        return genai.Client(
-            api_key=api_key,
-            http_options=types.HttpOptions(timeout=12000),
-        )
+    def _client(kind: str):
+        if kind == "vertex_v1beta1":
+            return genai.Client(vertexai=True, api_key=api_key,
+                                http_options=types.HttpOptions(api_version="v1beta1", timeout=12000))
+        if kind == "vertex_v1beta":
+            return genai.Client(vertexai=True, api_key=api_key,
+                                http_options=types.HttpOptions(api_version="v1beta", timeout=12000))
+        # developer_v1beta: the Gemini Developer API with the v1beta surface,
+        # which is where JSON mode / response_schema is enabled.
+        return genai.Client(api_key=api_key,
+                            http_options=types.HttpOptions(api_version="v1beta", timeout=12000))
 
     attempts = [
-        (True, GEMINI_MODEL),
-        (False, GEMINI_MODEL),
-        (True, "gemini-3.5-flash-lite"),
-        (False, "gemini-2.5-flash"),
+        ("developer_v1beta", GEMINI_MODEL),
+        ("vertex_v1beta1", GEMINI_MODEL),
+        ("vertex_v1beta", GEMINI_MODEL),
+        ("developer_v1beta", "gemini-3.5-flash-lite"),
     ]
     last_error_type = None
     last_error_detail = None
-    for use_vertex, model_id in attempts:
+    attempt_errors = []
+    for transport, model_id in attempts:
         try:
-            client = _client(use_vertex)
+            client = _client(transport)
             start_t = time.perf_counter()
             response = await asyncio.to_thread(
                 client.models.generate_content,
@@ -859,7 +860,8 @@ async def enrich_with_live_gemini(preset: Dict[str, Any]) -> Dict[str, Any]:
             preset["agents"]["agent_03"]["model"] = model_id
             preset["llm_mode"] = "live_gemini_verified"
             preset["llm_model"] = model_id
-            preset["llm_transport"] = "vertex_v1beta" if use_vertex else "developer_api"
+            preset["llm_transport"] = transport
+            preset["llm_attempt_errors"] = attempt_errors
             return preset
         except Exception as exc:  # never leak the key; keep only a sanitized provider message
             last_error_type = type(exc).__name__
@@ -867,8 +869,10 @@ async def enrich_with_live_gemini(preset: Dict[str, Any]) -> Dict[str, Any]:
             if api_key:
                 detail = detail.replace(api_key, "[redacted]")
             last_error_detail = detail
+            attempt_errors.append({"transport": transport, "model": model_id, "error": detail})
             continue
 
+    preset["llm_attempt_errors"] = attempt_errors
     preset["llm_mode"] = "live_gemini_failed_fell_back_to_deterministic"
     preset["llm_model"] = GEMINI_MODEL
     preset["llm_error_type"] = last_error_type
